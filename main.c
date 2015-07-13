@@ -5,11 +5,8 @@
 void compress(FILE *fin, char ArchiveName[200]);
 void extract(FILE *fin, char FileName[200]);
 
-int main()
-{
+int main(int argc, char* argv[]){
     FILE *fin;
-    printf("Hello, User.\n It's archivator develompment:\n   Gusarov V., Schyrov Al., Karandaev T.\n");
-    printf("Let's start: ");
     int i, j;
     char address[200];
     char FileName[200];
@@ -19,40 +16,21 @@ int main()
       ArchiveName[i] = NULL;
     }
     //Работа с консолью
-    while(1){
-      printf("\n             ");
-      gets(address);
-      if (strcmp(address, "exit") == 0) return 0;
-      i = 0;
-      while (1){
-        if (address[i] == ' ') break;
-        FileName[i] = address[i];
-        i++;
-      }
-      i++;
-      j = 0;
-      while (1){
-        if (address[i] == ' ') break;
-        ArchiveName[j] = address[i];
-        i++; j++;
-      }
-      i += 2;
-      if (address[i] == 'a'){
-        if (fopen(FileName, "rb") != NULL){
-          fin = fopen(FileName, "rb");
-          compress(fin, ArchiveName);
-          break;
-        } else printf("\nCannot find file: %s ", FileName);
-      } else if (address[i] == 'e'){
-          if (fopen(ArchiveName, "rb") != NULL){
-            fin = fopen(ArchiveName, "rb");
-            extract(fin, FileName);
-            break;
-          } else printf("\nCannot find file: %s ", ArchiveName);
-        } else{
-            printf("\nUnknowError, Try again: ");
-          }
-    }
+
+      if (strcmp(argv[3], "-a") == 0){
+        if (fopen(argv[1], "rb") != NULL){
+          fin = fopen(argv[1], "rb");
+          compress(fin, argv[2]);
+        } else
+            printf("\nCannot find file: %s ", argv[1]);
+      } else if (strcmp(argv[3], "-e") == 0){
+          if (fopen(argv[2], "rb") != NULL){
+            fin = fopen(argv[2], "rb");
+            extract(fin, argv[1]);
+          } else
+              printf("\nCannot find file: %s ", argv[2]);
+        } else
+            printf("\nUnknowKey, Try again: ");
 
     return 0;
 }
@@ -73,10 +51,8 @@ void extract(FILE *fin, char FileName[200]){
   char c;
   FILE *fout;
   fout = fopen(FileName, "w");
-  char test[3];
-  test[0] = fgetc(fin);
-  test[1] = fgetc(fin);
-  test[2] = fgetc(fin);
+  char* test[4];
+  fgets(test, 4, fin);
   if (strcmp(test, "vlt") == 0){
     while (1){
       c = fgetc(fin);
