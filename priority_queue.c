@@ -67,6 +67,7 @@ static void queue_sift_down(queue_t *que)
 
 void * queue_pop(queue_t *que)
 {
+	if (que->count < 1) return NULL;
 	int count = --que->count, *priors = que->priority;
 	void **els = que->elements, *result = que->elements[1];
 	que->elements[1] = els[count + 1];

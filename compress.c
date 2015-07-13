@@ -13,6 +13,7 @@ typedef
 	} huff_node_t;
 
 int frequency[CHARS_NUM];
+huff_node_t *nodes = NULL;
 
 static void count_frequency(FILE *fin)
 {
@@ -34,7 +35,20 @@ static huff_node_t * create_huff_node(const char c, const int frequency,
 
 static huff_node_t * build_huff_tree()
 {
-	
-	
+	int i, nodes_count = 0;
+	queue_t *queue = create_queue(sizeof(huff_node_t));
+	for(i = 0; i < CHARS_NUM; i++)
+	{
+		if (frequency[i] > 0)
+			queue_insert(queue, frequency[i], create_huff_node(char(i), frequency[i], NULL, NULL));	
+	}
+	huff_node_t *left = NULL, *right = NULL;
+	do
+	{
+		left = (huff_node_t*)queue_pop(queue);
+		right = (huff_node_t*)queue_pop(queue);
+		if (!right) break;
+		queue_insert(queue, create_huff_node(char(0), left->frequency + right->frequency, left, right));
+	} while (left && right);
 	return NULL;
 }
