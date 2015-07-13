@@ -30,50 +30,49 @@ void swap_queue_elements(queue_t *que, int a, int b)
 
 static void queue_sift_up(queue_t *que, int new_id)
 {
-	int i, *priors = que->priority;
+	int i;
 	for(i  = new_id; i > 1; i /= 2)
-		if (priors[i] < priors[i/2])
+		if (que->priority[i] < que->priority[i/2])
 			swap_queue_elements(que, i, i/2);
 		else break;
 }
 
 void queue_insert(queue_t *que, int priority, void *element)
 {
-	int count = ++que->count, *priors = que->priority;
-	void **els = que->elements;
-	que->priority = (int*)realloc(priors, (count + 1)*sizeof(int));
-	que->elements = (void**)realloc(els, (count + 1)*sizeof(void*));
-	priors[count] = priority;
-	els[count] = element;
+	int count = ++que->count;
+	que->priority = (int*)realloc(que->priority, (count + 1)*sizeof(int));
+	que->elements = (void**)realloc(que->elements, (count + 1)*sizeof(void*));
+	que->priority[count] = priority;
+	que->elements[count] = element;
 	queue_sift_up(que, count);
 }
 
 static void queue_sift_down(queue_t *que)
 {
-	int i, *priors = que->priority, min_ch_pr = 1, count = que->count;
+	int i, min_ch_pr = 1, count = que->count;
 	for(i = 1; ; i = min_ch_pr)
 	{
-		if (2*i + 1 >= count)
-			min_ch_pr = priors[2*i] < priors[2*i + 1] ? 2*i : 2*i + 1;
+		if (2*i + 1 <= count)
+			min_ch_pr = que->priority[2*i] < que->priority[2*i + 1] ? 2*i : 2*i + 1;
 		else if (2*i == count)
 			min_ch_pr = 2*i;
 		else return;
 		
-		if (priors[i] > priors[min_ch_pr])
+		if (que->priority[i] > que->priority[min_ch_pr])
 			swap_queue_elements(que, i, min_ch_pr);
-		else break;		
+		else break;	
 	}
 }
 
 void * queue_pop(queue_t *que)
 {
+	printf("%d\n", que->count);
 	if (que->count < 1) return NULL;
-	int count = --que->count, *priors = que->priority;
-	void **els = que->elements, *result = que->elements[1];
-	que->elements[1] = els[count + 1];
-	que->priority[1] = priors[count + 1];
-	que->elements = realloc(els, (count + 1)*sizeof(void*));
-	que->priority = (int*)realloc(priors, (count + 1)*sizeof(int));
+	int count = --que->count;
+	void *result = que->elements[1];
+	swap_queue_elements(que, 1, count + 1);
+	que->elements = realloc(que->elements, (count + 1)*sizeof(void*));
+	que->priority = (int*)realloc(que->priority, (count + 1)*sizeof(int));
 	queue_sift_down(que);
 	return result;	
 }

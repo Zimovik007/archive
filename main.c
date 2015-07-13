@@ -8,6 +8,11 @@ void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
   FILE *fin;
+  fin = fopen("input.txt", "r");
+  compress_huffman(fin);
+  fclose(fin);
+  return 0;
+  
   int i, j;
   char address[200];
   char FileName[200];
