@@ -6,33 +6,36 @@ void compress(FILE *fin, char ArchiveName[200]);
 void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
-    FILE *fin;
-    int i, j;
-    char address[200];
-    char FileName[200];
-    char ArchiveName[200];
-    for(i = 0; i < 200; i++){
-      FileName[i] = NULL;
-      ArchiveName[i] = NULL;
-    }
-    //Работа с консолью
-
-      if (strcmp(argv[3], "-a") == 0){
-        if (fopen(argv[1], "rb") != NULL){
-          fin = fopen(argv[1], "rb");
-          compress(fin, argv[2]);
-        } else
-            printf("\nCannot find file: %s ", argv[1]);
-      } else if (strcmp(argv[3], "-e") == 0){
-          if (fopen(argv[2], "rb") != NULL){
-            fin = fopen(argv[2], "rb");
-            extract(fin, argv[1]);
-          } else
-              printf("\nCannot find file: %s ", argv[2]);
-        } else
-            printf("\nUnknowKey, Try again: ");
-
+  FILE *fin;
+  int i, j;
+  char address[200];
+  char FileName[200];
+  char ArchiveName[200];
+  for(i = 0; i < 200; i++){
+    FileName[i] = (char)0;
+    ArchiveName[i] = (char)0;
+  }
+  //Работа с консолью
+  if ((argc > 0) && (argc < 4)){
+    printf("Error. Wrong Number Of Arguments");
     return 0;
+  }
+  if (strcmp(argv[3], "-a") == 0){
+    if (fopen(argv[1], "rb") != NULL){
+      fin = fopen(argv[1], "rb");
+      compress(fin, argv[2]);
+    } else
+        printf("\nCannot find file: %s ", argv[1]);
+  } else if (strcmp(argv[3], "-e") == 0){
+      if (fopen(argv[2], "rb") != NULL){
+        fin = fopen(argv[2], "rb");
+        extract(fin, argv[1]);
+      } else
+          printf("\nCannot find file: %s ", argv[2]);
+    } else
+        printf("\nUnknow Key, Try again: ");
+
+  return 0;
 }
 
 void compress(FILE *fin, char ArchiveName[200]){
