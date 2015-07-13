@@ -7,12 +7,12 @@
 typedef
 	struct huff_node_t
 	{
-		int frequency;
+		unsigned long int frequency;
 		char c;
 		struct huff_node_t *left, *right;
 	} huff_node_t;
 
-static void count_frequency(FILE *fin, int *frequency)
+static void count_frequency(FILE *fin, unsigned long int *frequency)
 {
 	char c;
 	int i;
@@ -31,7 +31,7 @@ static huff_node_t * create_huff_node(const char c, const int freq,
 	return new_node;
 }
 
-static huff_node_t * build_huff_tree(int *frequency)
+static huff_node_t * build_huff_tree(unsigned long int *frequency)
 {
 	int i;
 	queue_t *queue = create_queue(sizeof(huff_node_t));
@@ -84,11 +84,11 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 
 extern void compress_huffman(FILE *fin)
 {
-	int *frequency = (int*)calloc(CHARS_NUM, sizeof(int));
+	unsigned long int *frequency = (unsigned long int*)calloc(CHARS_NUM, sizeof(unsigned long int));
 	count_frequency(fin, frequency);
 	huff_node_t *root = build_huff_tree(frequency);
 	int 
 		**codes = (int**)calloc(CHARS_NUM, sizeof(int*)), 
 		*code_lengths = (int*)calloc(CHARS_NUM, sizeof(int));
-	_codes(root, codes, code_lengths);		
+	_codes(root, codes, code_lengths);	
 }

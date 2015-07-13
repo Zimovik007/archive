@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compress.c"
 
 void compress(FILE *fin, char ArchiveName[200]);
 void extract(FILE *fin, char FileName[200]);
