@@ -8,7 +8,7 @@ void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
   FILE *fin;
-  fin = fopen("input.txt", "r");
+  fin = fopen("input2.mp3", "r");
   compress_huffman(fin);
   fclose(fin);
   return 0;

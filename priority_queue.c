@@ -15,7 +15,7 @@ queue_t * create_queue(int element_size)
 	new_q->elements = malloc(sizeof(void*));
 	new_q->el_size = element_size;
 	new_q->count = 0;
-	return new_q;	
+	return new_q;
 }	
 
 void swap_queue_elements(queue_t *que, int a, int b)
@@ -66,7 +66,6 @@ static void queue_sift_down(queue_t *que)
 
 void * queue_pop(queue_t *que)
 {
-	printf("%d\n", que->count);
 	if (que->count < 1) return NULL;
 	int count = --que->count;
 	void *result = que->elements[1];

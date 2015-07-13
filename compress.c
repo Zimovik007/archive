@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "priority_queue.c"
 
-#define CHARS_NUM (256)
+#define CHARS_NUM (1024)
 
 typedef
 	struct huff_node_t
@@ -17,7 +18,8 @@ static void count_frequency(FILE *fin, unsigned long int *frequency)
 	char c;
 	int i;
 	for(i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
-	while (fscanf(fin, "%c", &c) != EOF) ++frequency[(int)c];
+	while (fscanf(fin, "%c", &c) != EOF) 
+		++frequency[(int)c + CHARS_NUM/2];		
 }
 
 static huff_node_t * create_huff_node(const char c, const int freq, 
@@ -38,7 +40,7 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		if (frequency[i] > 0)
-			queue_insert(queue, frequency[i], create_huff_node((char)i, frequency[i], NULL, NULL));	
+			queue_insert(queue, frequency[i], create_huff_node((char)(i - CHARS_NUM/2), frequency[i], NULL, NULL));	
 	}	
 	
 	huff_node_t *left = NULL, *right = NULL;
@@ -54,7 +56,7 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	return left;
 }
 
-int code_stack[1000], stack_size = 0;
+int code_stack[10000], stack_size = 0;
 static void _codes(huff_node_t *parent, int **codes, int *lengths)
 {
 	if (!parent) return;
@@ -64,23 +66,22 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 		_codes(parent->left, codes, lengths);
 		--stack_size;
 	}
-	else
+	else if (!parent->right)
 	{
-		memcpy(codes[(int)parent->c], code_stack, stack_size*sizeof(int));
-		lengths[(int)parent->c] = stack_size;
+		memcpy(&codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
+		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
 		return;
-	}
-	
+	}	
 	if (parent->right)
 	{
 		code_stack[stack_size++] = 1;
 		_codes(parent->right, codes, lengths);
 		--stack_size;
 	}
-	else
+	else if (!parent->left)
 	{
-		memcpy(codes[(int)parent->c], code_stack, stack_size*sizeof(int));
-		lengths[(int)parent->c] = stack_size;
+		memcpy(&codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
+		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
 		return;
 	}	
 }
@@ -91,7 +92,7 @@ extern void compress_huffman(FILE *fin)
 	count_frequency(fin, frequency);
 	huff_node_t *root = build_huff_tree(frequency);
 	int 
-		**codes = (int**)calloc(CHARS_NUM, sizeof(int*)), 
+		**codes = (int**)malloc(CHARS_NUM * sizeof(int*)), 
 		*code_lengths = (int*)calloc(CHARS_NUM, sizeof(int));
 	_codes(root, codes, code_lengths);
 }
