@@ -16,8 +16,13 @@ int main(int argc, char* argv[]){
     ArchiveName[i] = (char)0;
   }
   //Работа с консолью
-  if ((argc > 0) && (argc < 4)){
+  if ((argc > 1) && (argc < 4)){
     printf("Error. Wrong Number Of Arguments");
+    return 0;
+  }
+  if (argc == 1){
+    printf("\nNameFile ArchiveFile -a  -> Archive");
+    printf("\nNameFile ArchiveFile -e  -> Extract");
     return 0;
   }
   if (strcmp(argv[3], "-a") == 0){
