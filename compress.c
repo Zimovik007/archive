@@ -111,9 +111,11 @@ static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
 {
 	rewind(fin);
 	FILE *fout = fopen("ababaca", "w");
+	fprintf(fout, "00000000000000000000\n");
 	save_tree(fout, codes, lengths);
 	char c, prin_c = (char)0;
-	int i, index, k, bits_count = 0;
+	int i, index, k;
+	long unsigned int bits_count = 0;
 	while (fscanf(fin, "%c", &c) != EOF)
 	{
 		index = (int)c + CHARS_NUM/2;
@@ -129,6 +131,8 @@ static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
 			}
 		}
 	}
+	rewind(fout);
+	fprintf(fout, "%d.", bits_count);
 	fclose(fout);
 }
 
