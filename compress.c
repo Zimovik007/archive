@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "priority_queue.c"
 
 #define CHARS_NUM (256)
 
@@ -20,12 +21,14 @@ static void count_frequency(FILE *fin)
 	while (fscanf(fin, "%c", &c)) ++frequency[(int)c];	
 }
 
-static huff_node_t * create_huff_node(const char c, const int freq)
+static huff_node_t * create_huff_node(const char c, const int frequency, 
+	huff_node_t *left, huff_node_t *right)
 {
 	huff_node_t *new_node = (huff_node_t*)malloc(sizeof(huff_node_t));
 	new_node->c = c;
-	new_node->frequency = freq;
-	new_node->left = new_node->right = NULL;
+	new_node->frequency = frequency;
+	new_node->left = left;
+	new_node->right = right;
 	return new_node;
 }
 
