@@ -7,7 +7,7 @@ void extract(FILE *fin, char FileName[200]);
 
 int main()
 {
-    FILE *fin, *fout;
+    FILE *fin;
     printf("Hello, User.\n It's archivator develompment:\n   Gusarov V., Schyrov Al., Karandaev T.\n");
     printf("Let's start: ");
     int i, j;
@@ -58,9 +58,31 @@ int main()
 }
 
 void compress(FILE *fin, char ArchiveName[200]){
-
+  char c;
+  FILE *fout;
+  fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");
+  fprintf(fout, "vlt\n");
+  while (1){
+    c = fgetc(fin);
+    if (c == EOF) break;
+    fprintf(fout, "%c", c);
+  }
 }
 
 void extract(FILE *fin, char FileName[200]){
-
+  char c;
+  FILE *fout;
+  fout = fopen(FileName, "w");
+  char test[3];
+  test[0] = fgetc(fin);
+  test[1] = fgetc(fin);
+  test[2] = fgetc(fin);
+  if (strcmp(test, "vlt") == 0){
+    while (1){
+      c = fgetc(fin);
+      if (c == EOF) break;
+      fprintf(fout, "%c", c);
+    }
+  } else printf("Error... Wrong Format File...");
 }
+
