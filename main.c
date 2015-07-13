@@ -19,7 +19,6 @@ int main()
       ArchiveName[i] = NULL;
     }
     //Работа с консолью
-    if (strcmp(address, "exit") == 0) return 0;
     while(1){
       printf("\n             ");
       gets(address);
