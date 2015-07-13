@@ -38,13 +38,17 @@ int main()
       }
       i += 2;
       if (address[i] == 'a'){
-        fin = fopen(FileName, "rb");
-        compress(fin, ArchiveName);
-        break;
-      } else if (address[i] == 'e'){
-          fin = fopen(ArchiveName, "rb");
-          extract(fin, FileName);
+        if (fopen(FileName, "rb") != NULL){
+          fin = fopen(FileName, "rb");
+          compress(fin, ArchiveName);
           break;
+        } else printf("\nCannot find file: %s ", FileName);
+      } else if (address[i] == 'e'){
+          if (fopen(ArchiveName, "rb") != NULL){
+            fin = fopen(ArchiveName, "rb");
+            extract(fin, FileName);
+            break;
+          } else printf("\nCannot find file: %s ", ArchiveName);
         } else{
             printf("\nUnknowError, Try again: ");
           }
@@ -60,4 +64,3 @@ void compress(FILE *fin, char ArchiveName[200]){
 void extract(FILE *fin, char FileName[200]){
 
 }
-
