@@ -4,6 +4,7 @@
 #include "priority_queue.c"
 
 #define CHARS_NUM (1024)
+#define ASCII_0 (48)
 
 typedef
 	struct huff_node_t
@@ -68,7 +69,8 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 	}
 	else if (!parent->right)
 	{
-		memcpy(&codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
+		codes[(int)parent->c + CHARS_NUM/2] = (int*)malloc(stack_size*sizeof(int));
+		memcpy(codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
 		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
 		return;
 	}	
@@ -80,10 +82,54 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 	}
 	else if (!parent->left)
 	{
-		memcpy(&codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
+		codes[(int)parent->c + CHARS_NUM/2] = (int*)malloc(stack_size*sizeof(int));
+		memcpy(codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
 		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
+		printf("%d\n", stack_size);
 		return;
 	}	
+}
+
+static void save_tree(FILE *fout, int **codes, int *lengths)
+{	
+	int i, j, lng;
+	char c;
+	for(i = 0; i < CHARS_NUM; i++)
+	{
+		lng = lengths[i];
+		if (lng <= 0) continue;
+		c = (char)(i - CHARS_NUM/2);
+		fprintf(fout, "%d %c", lng, c);
+		for(j = 0; j < lng; j++)
+			fprintf(fout, "%c", (char)(codes[i][j] + ASCII_0));
+		fprintf(fout, "\n");		
+	}
+	fprintf(fout, "0 #\n");
+}
+
+static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
+{
+	rewind(fin);
+	FILE *fout = fopen("ababaca", "w");
+	save_tree(fout, codes, lengths);
+	char c, prin_c = (char)0;
+	int i, index, k, bits_count = 0;
+	while (fscanf(fin, "%c", &c) != EOF)
+	{
+		index = (int)c + CHARS_NUM/2;
+		for(i = 0; i < lengths[index]; i++)
+		{
+			prin_c = (prin_c << 1) | codes[index][i];			
+			++bits_count;
+			if (++k == 8)
+			{
+				fprintf(fout, "%c", prin_c);
+				prin_c = (char)0;
+				k = 0;				
+			}
+		}
+	}
+	fclose(fout);
 }
 
 extern void compress_huffman(FILE *fin)
@@ -95,4 +141,5 @@ extern void compress_huffman(FILE *fin)
 		**codes = (int**)malloc(CHARS_NUM * sizeof(int*)), 
 		*code_lengths = (int*)calloc(CHARS_NUM, sizeof(int));
 	_codes(root, codes, code_lengths);
+	codify(fin, root, codes, code_lengths);			
 }
