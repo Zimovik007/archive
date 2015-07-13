@@ -132,7 +132,7 @@ static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
 		}
 	}
 	rewind(fout);
-	fprintf(fout, "%d.", bits_count);
+	fprintf(fout, "%lu.", bits_count);
 	fclose(fout);
 }
 
