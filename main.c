@@ -8,11 +8,6 @@ void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
   FILE *fin;
-  fin = fopen("input2.mp3", "r");
-  compress_huffman(fin);
-  fclose(fin);
-  return 0;
-  
   int i, j;
   char address[200];
   char FileName[200];
@@ -27,8 +22,11 @@ int main(int argc, char* argv[]){
     return 0;
   }
   if (argc == 1){
-    printf("\nNameFile ArchiveFile -a  -> Archive");
-    printf("\nNameFile ArchiveFile -e  -> Extract");
+    printf("\n\nHello, bro. It's archivator. Developers: \n");
+    printf("    Gusarov.v, Schyrov Al., Karandaev T.\n\n==================\n\n");
+    printf("Look scheme comands:");
+    printf("\n  [FileName] [ArchiveName] -a    |Archive");
+    printf("\n  [FileName] [ArchiveName] -e    |Extract\n\n==================\n");
     return 0;
   }
   if (strcmp(argv[3], "-a") == 0){
@@ -50,7 +48,10 @@ int main(int argc, char* argv[]){
 }
 
 void compress(FILE *fin, char ArchiveName[200]){
-  char c;
+
+  compress_huffman(fin, ArchiveName);
+
+  /*char c;
   FILE *fout;
   fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");
   fprintf(fout, "vlt\n");
@@ -58,7 +59,7 @@ void compress(FILE *fin, char ArchiveName[200]){
     c = fgetc(fin);
     if (c == EOF) break;
     fprintf(fout, "%c", c);
-  }
+  }  */
 }
 
 void extract(FILE *fin, char FileName[200]){
