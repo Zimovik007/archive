@@ -2,19 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compress.c"
+#include "extract_huff.c"
 
 void compress(FILE *fin, char ArchiveName[200]);
 void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
   FILE *fin;
-  fin = fopen("input2.mp3", "r");
+  fin = fopen("input.mp3", "r");
   compress_huffman(fin);
   fclose(fin);
   return 0;
   
-  int i, j;
-  char address[200];
+  int i;
+  //char address[200];
   char FileName[200];
   char ArchiveName[200];
   for(i = 0; i < 200; i++){
