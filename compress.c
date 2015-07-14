@@ -10,7 +10,7 @@ typedef
 	struct huff_node_t
 	{
 		unsigned long int frequency;
-		char c;
+		unsigned char c;
 		struct huff_node_t *left, *right;
 	} huff_node_t;
 	
@@ -48,7 +48,7 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		if (frequency[i] > 0)
-			queue_insert(queue, frequency[i], create_huff_node((char)(i - CHARS_NUM/2), frequency[i], NULL, NULL));	
+			queue_insert(queue, frequency[i], create_huff_node((char)i, frequency[i], NULL, NULL));	
 	}
 	
 	huff_node_t *left = NULL, *right = NULL;
@@ -64,7 +64,7 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	return left;
 }
 
-int code_stack[1000], stack_size = 0;
+int stack_size = 0;
 static void _codes(huff_node_t *parent, cano_huff_t *lengths)
 {
 	if (!parent) return;
@@ -97,8 +97,16 @@ int compare_lengths_stable(const void *a, const void *b)
 	cano_huff_t A = *((cano_huff_t*)a), B = *((cano_huff_t*)b);
 	if (A.length > B.length) return 1;
 	else if (A.length < B.length) return -1;
-	else if (A.c < B.c) return 1;
-	else if (A.c > B.c) return -1;
+	else if (A.c > B.c) return 1;
+	else if (A.c < B.c) return -1;
+	else return 0;
+}
+
+int compare_chars_alphabet(const void *a, const void *b)
+{
+	cano_huff_t A = *((cano_huff_t*)a), B = *((cano_huff_t*)b);
+	if (A.c > B.c) return 1;
+	else if (A.c < B.c) return -1;
 	else return 0;
 }
 
@@ -121,9 +129,10 @@ static void codify(FILE *fin, huff_node_t *root, unsigned long int *codes, cano_
 	int i, k = 0, bit;
 	while (fscanf(fin, "%c", &c) != EOF)
 	{
+		//printf("%c %d %lu\n", c, lengths[c + CHARS_NUM/2].length, codes[c + CHARS_NUM/2]);
 		for(i = 0; i < lengths[c + CHARS_NUM/2].length; i++)
 		{
-			bit = codes[i] & (1 << i);
+			bit = codes[c + CHARS_NUM/2] & (1 << i);
 			prin_c = prin_c | (bit << k);						
 			if (++k == 8)
 			{
@@ -153,10 +162,10 @@ extern void compress_huffman(FILE *fin)
 	
 	qsort(code_lengths, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
 	
-	codes[code_lengths[0].c] = 0;
-		
+	for(i = 0; i < CHARS_NUM; i++) codes[i] = 0;		
 	for(i = 1; i < CHARS_NUM; i++)
 	{
+		if (code_lengths[i - 1].length == 0) continue;
 		if (code_lengths[i].length == code_lengths[i - 1].length)
 			codes[code_lengths[i].c] = codes[code_lengths[i - 1].c] + 1;
 		else
@@ -164,10 +173,7 @@ extern void compress_huffman(FILE *fin)
 			int bits = codes[code_lengths[i - 1].c] + 1;
 			codes[code_lengths[i].c] = bits << 1;
 		}
-	}
-	
-	for(i = 0; i < CHARS_NUM; i++)
-		printf("%d\n", code_lengths[i].length);
-	
+	}	
+	qsort(code_lengths, CHARS_NUM, sizeof(cano_huff_t), compare_chars_alphabet);
 	codify(fin, root, codes, code_lengths);	
 }
