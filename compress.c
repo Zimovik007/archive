@@ -17,8 +17,9 @@ typedef
 typedef
 	struct cano_huff_t
 	{
-		int length;
 		unsigned char c;
+		int length;
+		unsigned long int code;
 	} cano_huff_t;
 
 static void count_frequency(FILE *fin, unsigned long int *frequency)
@@ -65,29 +66,29 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 }
 
 int stack_size = 0;
-static void _codes(huff_node_t *parent, cano_huff_t *lengths)
+static void _codes(huff_node_t *parent, cano_huff_t *codes)
 {
 	if (!parent) return;
 	if (parent->left)
 	{
 		++stack_size;
-		_codes(parent->left, lengths);
+		_codes(parent->left, codes);
 		--stack_size;
 	}
 	else if (!parent->right)
 	{
-		lengths[(int)parent->c].length = stack_size;
+		codes[(int)parent->c].length = stack_size;
 		return;
 	}	
 	if (parent->right)
 	{
 		++stack_size;
-		_codes(parent->right, lengths);
+		_codes(parent->right, codes);
 		--stack_size;
 	}
 	else if (!parent->left)
 	{
-		lengths[(int)parent->c].length = stack_size;
+		codes[(int)parent->c].length = stack_size;
 		return;
 	}	
 }
@@ -110,70 +111,69 @@ int compare_chars_alphabet(const void *a, const void *b)
 	else return 0;
 }
 
-static void save_tree(FILE *fout, unsigned long int *codes, cano_huff_t *lengths)
+static void save_tree(FILE *fout, cano_huff_t *codes)
 {	
 	int i;
 	for(i = 0; i < CHARS_NUM; i++)
 	{
-		fprintf(fout, "%d ", lengths[i].length);
+		fprintf(fout, "%d ", codes[i].length);
 	}
-	fprintf(fout, "#");
+	fprintf(fout, "#\n");
 }
 
-static void codify(FILE *fin, huff_node_t *root, unsigned long int *codes, cano_huff_t *lengths)
+static void codify(FILE *fin, huff_node_t *root, cano_huff_t *codes, FILE *fout)
 {
 	rewind(fin);
-	FILE *fout = fopen("ababaca", "w");
-	save_tree(fout, codes, lengths);
+	save_tree(fout, codes);
 	char c, prin_c = (char)0;
-	int i, k = 0, bit;
+	int i, k = 0, bit, j;
+	
 	while (fscanf(fin, "%c", &c) != EOF)
 	{
-		//printf("%c %d %lu\n", c, lengths[c + CHARS_NUM/2].length, codes[c + CHARS_NUM/2]);
-		for(i = 0; i < lengths[c + CHARS_NUM/2].length; i++)
+		for(j = CHARS_NUM - 1; codes[j].c != c + CHARS_NUM/2; j--);
+		for(i = 0; i < codes[j].length; i++)
 		{
-			bit = codes[c + CHARS_NUM/2] & (1 << i);
+			bit = codes[j].code & (1 << i);
 			prin_c = prin_c | (bit << k);						
 			if (++k == 8)
 			{
 				fprintf(fout, "%c", prin_c);
 				prin_c = (char)0;
-				k = 0;				
+				k = 0;
 			}
 		}
 	}
 	fclose(fout);
 }
 
-extern void compress_huffman(FILE *fin)
+extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
 {
 	unsigned long int *frequency = (unsigned long int*)calloc(CHARS_NUM, sizeof(unsigned long int));
 	count_frequency(fin, frequency);
 	huff_node_t *root = build_huff_tree(frequency);
-	unsigned long int *codes = (unsigned long int*)malloc(CHARS_NUM * sizeof(unsigned long int));
-	cano_huff_t *code_lengths = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
+	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;
 	for(i = 0; i < CHARS_NUM; i++)
 	{
-		code_lengths[i].c = (char)i;
-		code_lengths[i].length = 0;
+		codes[i].c = (char)i;
+		codes[i].length = 0;
+		codes[i].code = 0;
 	}
-	_codes(root, code_lengths);
+	_codes(root, codes);
 	
-	qsort(code_lengths, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
-	
-	for(i = 0; i < CHARS_NUM; i++) codes[i] = 0;		
+	qsort(codes, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
+		
 	for(i = 1; i < CHARS_NUM; i++)
 	{
-		if (code_lengths[i - 1].length == 0) continue;
-		if (code_lengths[i].length == code_lengths[i - 1].length)
-			codes[code_lengths[i].c] = codes[code_lengths[i - 1].c] + 1;
-		else
-		{
-			int bits = codes[code_lengths[i - 1].c] + 1;
-			codes[code_lengths[i].c] = bits << 1;
-		}
-	}	
-	qsort(code_lengths, CHARS_NUM, sizeof(cano_huff_t), compare_chars_alphabet);
-	codify(fin, root, codes, code_lengths);	
+		if (codes[i - 1].length == 0) continue;
+		codes[i].code = codes[i - 1].code + 1;
+		if (codes[i].length != codes[i - 1].length)
+			codes[i].code = codes[i].code << 1;
+	}
+
+	FILE *fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");	
+
+	fprintf(fout, "UPA File Archive\nsign: UPA\nHUFF\n1\n%d\n", fileCount);
+
+	codify(fin, root, codes, fout); 
 }

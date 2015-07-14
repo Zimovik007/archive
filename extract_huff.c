@@ -69,7 +69,7 @@ extern void extract_huffman(FILE *fin)
 		for(i = 0; i < key_leng; i++)
 		{
 			fscanf(fin, "%c", &bit);
-			cur_node = add_huff_node(cur_node, bit, c);			
+			cur_node = add_huff_node(cur_node, bit, c);	
 		}
 		fscanf(fin, "\n");
 	}
