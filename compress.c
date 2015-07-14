@@ -19,11 +19,11 @@ static void count_frequency(FILE *fin, unsigned long int *frequency)
 	char c;
 	int i;
 	for(i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
-	while (fscanf(fin, "%c", &c) != EOF) 
-		++frequency[(int)c + CHARS_NUM/2];		
+	while (fscanf(fin, "%c", &c) != EOF)
+		++frequency[(int)c + CHARS_NUM/2];
 }
 
-static huff_node_t * create_huff_node(const char c, const int freq, 
+static huff_node_t * create_huff_node(const char c, const int freq,
 	huff_node_t *left, huff_node_t *right)
 {
 	huff_node_t *new_node = (huff_node_t*)malloc(sizeof(huff_node_t));
@@ -41,19 +41,19 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		if (frequency[i] > 0)
-			queue_insert(queue, frequency[i], create_huff_node((char)(i - CHARS_NUM/2), frequency[i], NULL, NULL));	
-	}	
-	
+			queue_insert(queue, frequency[i], create_huff_node((char)(i - CHARS_NUM/2), frequency[i], NULL, NULL));
+	}
+
 	huff_node_t *left = NULL, *right = NULL;
 	do
 	{
 		left = (huff_node_t*)queue_pop(queue);
 		right = (huff_node_t*)queue_pop(queue);
 		if (!right || !left) break;
-		queue_insert(queue, left->frequency + right->frequency, 
+		queue_insert(queue, left->frequency + right->frequency,
 			create_huff_node((char)0, left->frequency + right->frequency, left, right));
 	} while (left && right);
-	
+
 	return left;
 }
 
@@ -73,7 +73,7 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 		memcpy(codes[(int)parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
 		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
 		return;
-	}	
+	}
 	if (parent->right)
 	{
 		code_stack[stack_size++] = 1;
@@ -87,11 +87,11 @@ static void _codes(huff_node_t *parent, int **codes, int *lengths)
 		lengths[(int)parent->c + CHARS_NUM/2] = stack_size;
 		printf("%d\n", stack_size);
 		return;
-	}	
+	}
 }
 
 static void save_tree(FILE *fout, int **codes, int *lengths)
-{	
+{
 	int i, j, lng;
 	char c;
 	for(i = 0; i < CHARS_NUM; i++)
@@ -99,19 +99,17 @@ static void save_tree(FILE *fout, int **codes, int *lengths)
 		lng = lengths[i];
 		if (lng <= 0) continue;
 		c = (char)(i - CHARS_NUM/2);
-		fprintf(fout, "%d %c", lng, c);
+		fprintf(fout, "%d %c ", lng, c);
 		for(j = 0; j < lng; j++)
-			fprintf(fout, "%c", (char)(codes[i][j] + ASCII_0));
-		fprintf(fout, "\n");		
+            fprintf(fout, "%c", (char)(codes[i][j] + ASCII_0));
+		fprintf(fout, "\n");
 	}
 	fprintf(fout, "0 #\n");
 }
 
-static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
+static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths, FILE *fout)
 {
 	rewind(fin);
-	FILE *fout = fopen("ababaca", "w");
-	fprintf(fout, "00000000000000000000\n");
 	save_tree(fout, codes, lengths);
 	char c, prin_c = (char)0;
 	int i, index, k;
@@ -121,29 +119,32 @@ static void codify(FILE *fin, huff_node_t *root, int **codes, int *lengths)
 		index = (int)c + CHARS_NUM/2;
 		for(i = 0; i < lengths[index]; i++)
 		{
-			prin_c = (prin_c << 1) | codes[index][i];			
+			prin_c = (prin_c << 1) | codes[index][i];
 			++bits_count;
 			if (++k == 8)
 			{
-				fprintf(fout, "%c", prin_c);
+				fprintf(fout, " %c ", prin_c);
 				prin_c = (char)0;
-				k = 0;				
+				k = 0;
 			}
 		}
 	}
-	rewind(fout);
-	fprintf(fout, "%lu.", bits_count);
 	fclose(fout);
 }
 
-extern void compress_huffman(FILE *fin)
+extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
 {
 	unsigned long int *frequency = (unsigned long int*)calloc(CHARS_NUM, sizeof(unsigned long int));
 	count_frequency(fin, frequency);
 	huff_node_t *root = build_huff_tree(frequency);
-	int 
-		**codes = (int**)malloc(CHARS_NUM * sizeof(int*)), 
+	int
+		**codes = (int**)malloc(CHARS_NUM * sizeof(int*)),
 		*code_lengths = (int*)calloc(CHARS_NUM, sizeof(int));
 	_codes(root, codes, code_lengths);
-	codify(fin, root, codes, code_lengths);			
+
+	FILE *fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");
+	fprintf(fout, "UPA File Archive\nsign: UPA\nHUFF\n1\n%d\n", fileCount);
+
+	codify(fin, root, codes, code_lengths, fout);
+
 }
