@@ -27,7 +27,7 @@ static void count_frequency(FILE *fin, unsigned long int *frequency)
 	int i;
 	for(i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
 	while (fscanf(fin, "%c", &c) != EOF) 
-		++frequency[(int)c + CHARS_NUM/2];		
+		++frequency[c + CHARS_NUM/2];		
 }
 
 static huff_node_t * create_huff_node(const char c, const int freq, 
@@ -64,36 +64,30 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 	return left;
 }
 
-int code_stack[10000], stack_size = 0;
-//static void _codes(huff_node_t *parent, int **codes, cano_huff_t *lengths)
+int code_stack[1000], stack_size = 0;
 static void _codes(huff_node_t *parent, cano_huff_t *lengths)
 {
 	if (!parent) return;
 	if (parent->left)
 	{
-		code_stack[stack_size++] = 0;
+		++stack_size;
 		_codes(parent->left, lengths);
 		--stack_size;
 	}
 	else if (!parent->right)
 	{
-		//codes[parent->c + CHARS_NUM/2] = (int*)malloc(stack_size*sizeof(int));
-		//memcpy(codes[parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
-		lengths[parent->c + CHARS_NUM/2].length = stack_size;
+		lengths[(int)parent->c].length = stack_size;
 		return;
 	}	
 	if (parent->right)
 	{
-		code_stack[stack_size++] = 1;
+		++stack_size;
 		_codes(parent->right, lengths);
 		--stack_size;
 	}
 	else if (!parent->left)
 	{
-		//codes[parent->c + CHARS_NUM/2] = (int*)malloc(stack_size*sizeof(int));
-		//memcpy(codes[parent->c + CHARS_NUM/2], code_stack, stack_size*sizeof(int));
-		lengths[parent->c + CHARS_NUM/2].length = stack_size;
-		printf("%d\n", stack_size);
+		lengths[(int)parent->c].length = stack_size;
 		return;
 	}	
 }
@@ -103,45 +97,34 @@ int compare_lengths_stable(const void *a, const void *b)
 	cano_huff_t A = *((cano_huff_t*)a), B = *((cano_huff_t*)b);
 	if (A.length > B.length) return 1;
 	else if (A.length < B.length) return -1;
-	else if (A.c > B.c) return 1;
-	else if (A.c < B.c) return -1;
+	else if (A.c < B.c) return 1;
+	else if (A.c > B.c) return -1;
 	else return 0;
 }
 
 static void save_tree(FILE *fout, unsigned long int *codes, cano_huff_t *lengths)
 {	
-	int i, j, lng;
-	char c;
+	int i;
 	for(i = 0; i < CHARS_NUM; i++)
 	{
-		lng = lengths[i].length;
-		if (lng <= 0) continue;
-		c = (char)(i - CHARS_NUM/2);
-		fprintf(fout, "%d %c", lng, c);
-		//for(j = 0; j < lng; j++)
-			//fprintf(fout, "%c", (char)(codes[i][j] + ASCII_0));
-		fprintf(fout, "\n");		
+		fprintf(fout, "%d ", lengths[i].length);
 	}
-	fprintf(fout, "0 #\n");
+	fprintf(fout, "#");
 }
 
 static void codify(FILE *fin, huff_node_t *root, unsigned long int *codes, cano_huff_t *lengths)
 {
 	rewind(fin);
 	FILE *fout = fopen("ababaca", "w");
-	fprintf(fout, "00000000000000000000\n");
 	save_tree(fout, codes, lengths);
 	char c, prin_c = (char)0;
-	int i, index, k;
-	long unsigned int bits_count = 0;
+	int i, k = 0, bit;
 	while (fscanf(fin, "%c", &c) != EOF)
 	{
-		index = c + CHARS_NUM/2;
-		for(i = 0; i < lengths[index].length; i++)
+		for(i = 0; i < lengths[c + CHARS_NUM/2].length; i++)
 		{
-			prin_c = (prin_c << 1) | codes[index][i]; 
-			prin_c = prin_c | (codes[index][i] << k);			
-			++bits_count;
+			bit = codes[i] & (1 << i);
+			prin_c = prin_c | (bit << k);						
 			if (++k == 8)
 			{
 				fprintf(fout, "%c", prin_c);
@@ -150,8 +133,6 @@ static void codify(FILE *fin, huff_node_t *root, unsigned long int *codes, cano_
 			}
 		}
 	}
-	rewind(fout);
-	fprintf(fout, "%lu.", bits_count);
 	fclose(fout);
 }
 
@@ -161,22 +142,32 @@ extern void compress_huffman(FILE *fin)
 	count_frequency(fin, frequency);
 	huff_node_t *root = build_huff_tree(frequency);
 	unsigned long int *codes = (unsigned long int*)malloc(CHARS_NUM * sizeof(unsigned long int));
-	cano_huff_t *code_lengths = (cano_huff_t*)calloc(CHARS_NUM, sizeof(cano_huff_t));
+	cano_huff_t *code_lengths = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;
 	for(i = 0; i < CHARS_NUM; i++)
-		code_lengths[(int)i].c = i;
+	{
+		code_lengths[i].c = (char)i;
+		code_lengths[i].length = 0;
+	}
 	_codes(root, code_lengths);
+	
 	qsort(code_lengths, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
-	for(i = 0; i < CHARS_NUM; i++)
-		printf("%c %d\n", code_lengths[i].c, code_lengths[i].length);
-	codes[code_lengths[0].c + CHARS_NUM/2] = 0;
-	for(i = 1; i < CHARS_NUM - 1; i++)
+	
+	codes[code_lengths[0].c] = 0;
+		
+	for(i = 1; i < CHARS_NUM; i++)
 	{
 		if (code_lengths[i].length == code_lengths[i - 1].length)
-			codes[code_lengths[i].c + CHARS_NUM/2] = codes[code_lengths[i - 1].c + CHARS_NUM/2] + 1;
+			codes[code_lengths[i].c] = codes[code_lengths[i - 1].c] + 1;
 		else
-			codes[code_lengths[i].c + CHARS_NUM/2] = (codes[code_lengths[i - 1].c + CHARS_NUM/2] << 1) + 1;
+		{
+			int bits = codes[code_lengths[i - 1].c] + 1;
+			codes[code_lengths[i].c] = bits << 1;
+		}
 	}
-		
-	codify(fin, root, codes, code_lengths);			
+	
+	for(i = 0; i < CHARS_NUM; i++)
+		printf("%d\n", code_lengths[i].length);
+	
+	codify(fin, root, codes, code_lengths);	
 }

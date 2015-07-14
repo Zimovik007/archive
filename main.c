@@ -9,7 +9,7 @@ void extract(FILE *fin, char FileName[200]);
 
 int main(int argc, char* argv[]){
   FILE *fin;
-  fin = fopen("input.mp3", "r");
+  fin = fopen("tetete", "r");
   compress_huffman(fin);
   fclose(fin);
   return 0;
