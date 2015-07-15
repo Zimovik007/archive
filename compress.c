@@ -113,7 +113,7 @@ extern void generate_codes(cano_huff_t *codes)
 		if (codes[i - 1].length == 0) continue;
 		if (codes[i].length != codes[i - 1].length)
 		{
-			codes[i].code = (codes[i - 1].code + 1) << 1;
+			codes[i].code = (codes[i - 1].code + 1) << (codes[i].length - codes[i - 1].length);
 		}
 		else
 			codes[i].code = codes[i - 1].code + 1;

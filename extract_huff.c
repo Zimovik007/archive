@@ -33,7 +33,6 @@ static ext_huff_node_t * ext_add_huff_node(ext_huff_node_t *parent, int bit, uns
 		if (!parent->left)
 			parent->left = ext_create_huff_node(c);			
 		result = parent->left;
-		if (c != (unsigned char)0) result->c = c;
 	}
 	else 
 	if (bit == 1)
@@ -41,7 +40,6 @@ static ext_huff_node_t * ext_add_huff_node(ext_huff_node_t *parent, int bit, uns
 		if (!parent->right)
 			parent->right = ext_create_huff_node(c);
 		result = parent->right;
-		if (c != (unsigned char)0) result->c = c;
 	}
 	return result;
 }
@@ -84,8 +82,7 @@ extern void extract_huffman(FILE *fin, FILE *fout)
 		{
 			cur_node = ext_tree_step(cur_node, (c & i) == i);
 			if (!cur_node) break;
-			//printf("-%c|\n", cur_node->c);
-			if (cur_node->c != (unsigned char)0)
+			if (!cur_node->left && !cur_node->right)
 			{
 				fprintf(fout, "%c", cur_node->c);
 				cur_node = root;
