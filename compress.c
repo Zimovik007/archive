@@ -20,7 +20,7 @@ static void count_frequency(FILE *orig, unsigned int *frequency, unsigned int *o
 	for(i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
 	while (!feof(orig)) 
 	{
-		fscanf(orig, "%c", &c);
+		if (fscanf(orig, "%c", &c) <= 0) break;
 		++frequency[(int)c];
 		++*orig_size;
 	}

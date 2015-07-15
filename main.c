@@ -28,6 +28,25 @@ FILE *fout;
 enter* Files;
 
 int main(int argc, char* argv[]){
+	
+	FILE *fi, *fu, *or, *ar;
+	fi = fopen("test5.in", "rb");
+	fu = fopen("test5.iin", "wb");
+	unsigned int ors = 0, ars = 0;
+	ar = compress_huffman(fi, &ors, &ars);
+	rewind(ar);
+	or = extract_huffman(ar, ors);
+	char tc;
+	rewind(or);
+	while (!feof(or))
+	{
+		if (fscanf(or, "%c", &tc) <= 0) break;
+		fprintf(fu, "%c", tc);
+	}
+	fclose(fi);
+	fclose(fu);
+	return 0;
+
   FILE *temp;
   int i = 1;
   char c = (int)0;
@@ -113,7 +132,6 @@ void archivator(char* argv[], int argc){
     if (argv[i+1][0] == '-'){
       ArchiveName = malloc(sizeof(char) * strlen(argv[i]));
       ArchiveName = argv[i];
-      i++;
       break;
     }
     else{
@@ -172,7 +190,7 @@ void archivator(char* argv[], int argc){
   }
   //Запись в файл
   for(i = 0; i < count; i++){
-    fprintf(fout, "%c\n", Files[i].FileLength);
+    fprintf(fout, "%d\n", Files[i].FileLength);
     fprintf(fout, "%s\n", Files[i].FileName);
     fprintf(fout, "%d\n", Files[i].SizePacked);
     fprintf(fout, "%d\n", Files[i].SizeOriginal);
