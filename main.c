@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "compress.c"
+#include "extract_huff.h"
+#include "compress.h"
 
 void compress(FILE *fin, char ArchiveName[200], int fileCount);
 void extract(FILE *fin, char FileName[200]);
@@ -9,7 +10,8 @@ void extract(FILE *fin, char FileName[200]);
 int main(int argc, char* argv[]){
   FILE *fin, *fout;
   int i;
-  char c;  
+  char c;
+  
   //Работа с консолью
   if ((argc > 1) && (argc < 4)){
     printf("Error. Wrong Number Of Arguments");

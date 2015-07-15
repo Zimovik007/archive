@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "priority_queue.c"
-
-#define CHARS_NUM (256)
-#define ASCII_0 (48)
+#include "priority_queue.h"
+#include "compress.h"
 
 typedef
 	struct huff_node_t
@@ -13,14 +11,6 @@ typedef
 		unsigned char c;
 		struct huff_node_t *left, *right;
 	} huff_node_t;
-	
-typedef
-	struct cano_huff_t
-	{
-		unsigned char c;
-		int length;
-		unsigned long int code;
-	} cano_huff_t;
 
 static void count_frequency(FILE *fin, unsigned long int *frequency)
 {
@@ -66,13 +56,13 @@ static huff_node_t * build_huff_tree(unsigned long int *frequency)
 }
 
 int stack_size = 0;
-static void _codes(huff_node_t *parent, cano_huff_t *codes)
+static void count_lengths_codes(huff_node_t *parent, cano_huff_t *codes)
 {
 	if (!parent) return;
 	if (parent->left)
 	{
 		++stack_size;
-		_codes(parent->left, codes);
+		count_lengths_codes(parent->left, codes);
 		--stack_size;
 	}
 	else if (!parent->right)
@@ -83,7 +73,7 @@ static void _codes(huff_node_t *parent, cano_huff_t *codes)
 	if (parent->right)
 	{
 		++stack_size;
-		_codes(parent->right, codes);
+		count_lengths_codes(parent->right, codes);
 		--stack_size;
 	}
 	else if (!parent->left)
@@ -111,14 +101,25 @@ int compare_chars_alphabet(const void *a, const void *b)
 	else return 0;
 }
 
+extern void generate_codes(cano_huff_t *codes)
+{
+	int i;
+	qsort(codes, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
+	for(i = 1; i < CHARS_NUM; i++)
+	{
+		if (codes[i - 1].length == 0) continue;
+		codes[i].code = codes[i - 1].code + 1;
+		if (codes[i].length != codes[i - 1].length)
+			codes[i].code = codes[i].code << 1;
+	}
+	qsort(codes, CHARS_NUM, sizeof(cano_huff_t), compare_chars_alphabet);
+}
+
 static void save_tree(FILE *fout, cano_huff_t *codes)
 {	
 	int i;
 	for(i = 0; i < CHARS_NUM; i++)
-	{
 		fprintf(fout, "%d ", codes[i].length);
-	}
-	fprintf(fout, "#\n");
 }
 
 static void codify(FILE *fin, huff_node_t *root, cano_huff_t *codes, FILE *fout)
@@ -150,6 +151,7 @@ extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
 {
 	unsigned long int *frequency = (unsigned long int*)calloc(CHARS_NUM, sizeof(unsigned long int));
 	count_frequency(fin, frequency);
+	
 	huff_node_t *root = build_huff_tree(frequency);
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;
@@ -159,21 +161,14 @@ extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
 		codes[i].length = 0;
 		codes[i].code = 0;
 	}
-	_codes(root, codes);
 	
-	qsort(codes, CHARS_NUM, sizeof(cano_huff_t), compare_lengths_stable);
-		
-	for(i = 1; i < CHARS_NUM; i++)
-	{
-		if (codes[i - 1].length == 0) continue;
-		codes[i].code = codes[i - 1].code + 1;
-		if (codes[i].length != codes[i - 1].length)
-			codes[i].code = codes[i].code << 1;
-	}
+	count_lengths_codes(root, codes);
+	
+	generate_codes(codes);
 
 	FILE *fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");	
 
 	fprintf(fout, "UPA File Archive\nsign: UPA\nHUFF\n1\n%d\n", fileCount);
-
-	codify(fin, root, codes, fout); 
+	
+	codify(fin, root, codes, fout);
 }

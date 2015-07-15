@@ -1,12 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef
-	struct queue_t
-	{
-		int *priority, el_size, count;
-		void **elements;
-	} queue_t;
+#include "priority_queue.h"
 	
 queue_t * create_queue(int element_size)
 {
@@ -18,7 +12,7 @@ queue_t * create_queue(int element_size)
 	return new_q;
 }	
 
-void swap_queue_elements(queue_t *que, int a, int b)
+static void swap_queue_elements(queue_t *que, int a, int b)
 {
 	void *t_el = que->elements[a];
 	que->elements[a] = que->elements[b];
@@ -37,7 +31,7 @@ static void queue_sift_up(queue_t *que, int new_id)
 		else break;
 }
 
-void queue_insert(queue_t *que, int priority, void *element)
+extern void queue_insert(queue_t *que, int priority, void *element)
 {
 	int count = ++que->count;
 	que->priority = (int*)realloc(que->priority, (count + 1)*sizeof(int));
@@ -64,7 +58,7 @@ static void queue_sift_down(queue_t *que)
 	}
 }
 
-void * queue_pop(queue_t *que)
+extern void * queue_pop(queue_t *que)
 {
 	if (que->count < 1) return NULL;
 	int count = --que->count;
