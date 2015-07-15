@@ -35,7 +35,7 @@ static huff_node_t * create_huff_node(const char c, const int freq,
 static huff_node_t * build_huff_tree(unsigned long int *frequency)
 {
 	int i;
-	queue_t *queue = create_queue(sizeof(huff_node_t));
+	queue_t *queue = create_queue(sizeof(queue_t));
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		if (frequency[i] > 0)

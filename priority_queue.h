@@ -9,6 +9,8 @@ typedef
 		int *priority, el_size, count;
 		void **elements;
 	} queue_t;
+	
+extern queue_t * create_queue(int);
 
 extern void queue_insert(queue_t *, int, void *);
 

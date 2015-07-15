@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "priority_queue.h"
 	
-queue_t * create_queue(int element_size)
+extern queue_t * create_queue(int element_size)
 {
 	queue_t *new_q = (queue_t*)malloc(sizeof(queue_t));
 	new_q->priority = (int*)malloc(sizeof(int));
