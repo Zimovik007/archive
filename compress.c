@@ -135,6 +135,7 @@ static void codify(FILE *fin, huff_node_t *root, cano_huff_t *codes, FILE *fout)
 		for(i = 0; i < codes[j].length; i++)
 		{
 			bit = codes[j].code & (1 << i);
+			bit = !(!bit);
 			prin_c = prin_c | (bit << k);						
 			if (++k == 8)
 			{
@@ -147,7 +148,7 @@ static void codify(FILE *fin, huff_node_t *root, cano_huff_t *codes, FILE *fout)
 	fclose(fout);
 }
 
-extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
+extern FILE * compress_huffman(FILE *fin, char ArchiveName[200])
 {
 	unsigned long int *frequency = (unsigned long int*)calloc(CHARS_NUM, sizeof(unsigned long int));
 	count_frequency(fin, frequency);
@@ -165,10 +166,9 @@ extern void compress_huffman(FILE *fin, char ArchiveName[200], int fileCount)
 	count_lengths_codes(root, codes);
 	
 	generate_codes(codes);
-
-	FILE *fout = fopen(strncat(ArchiveName, ".vlt", 4), "w");	
-
-	fprintf(fout, "UPA File Archive\nsign: UPA\nHUFF\n1\n%d\n", fileCount);
+	
+	FILE* fout = fopen("comptemp", "w");
 	
 	codify(fin, root, codes, fout);
+	return fout;
 }

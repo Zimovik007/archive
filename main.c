@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 }
 
 void compress(FILE *fin, char ArchiveName[200], int fileCount){
-  compress_huffman(fin, ArchiveName, fileCount);
+  compress_huffman(fin, ArchiveName);
 }
 
 void extract(FILE *fin, char FileName[200]){
@@ -88,6 +88,8 @@ void extract(FILE *fin, char FileName[200]){
     fscanf(fin, "\n");
   }
   return;
-  //if (alg_id == "HUFF") extract_huffman(fin);
+  FILE *fout = fopen(FileName, "w");
+  if (strcmp(alg_id, "HUFF")) extract_huffman(fin, fout);
+  fclose(fout);
 }
 
