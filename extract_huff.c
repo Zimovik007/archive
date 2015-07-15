@@ -59,36 +59,39 @@ static void ext_build_huff_tree(cano_huff_t *codes, ext_huff_node_t *root)
 	}
 }
 
-extern void extract_huffman(FILE *fin, FILE *fout)
+extern FILE * extract_huffman(FILE *archf, unsigned int orig_size)
 {
 	ext_huff_node_t *root = ext_create_huff_node((unsigned char)0), *cur_node;
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;	
 	for(i = 0; i < CHARS_NUM; i++)
 	{
-		fscanf(fin, "%d ", &codes[i].length);
+		fscanf(archf, "%d ", &codes[i].length);
 		codes[i].c = (unsigned char)i;
 		codes[i].code = 0;	
 	}
 	generate_codes(codes);
 	ext_build_huff_tree(codes, root);
-	
+	FILE *orig = tmpfile();
 	unsigned char c = 0;
 	cur_node = root;
-	while (!feof(fin) && cur_node)
+	unsigned int cur_buff_pos = 0;
+	while (!feof(archf) && cur_buff_pos < orig_size)
 	{
-		fscanf(fin, "%c", &c);
+		fscanf(archf, "%c", &c);
 		for(i = 1; i <= 128; i = i << 1)
 		{
 			cur_node = ext_tree_step(cur_node, (c & i) == i);
 			if (!cur_node) break;
 			if (!cur_node->left && !cur_node->right)
 			{
-				fprintf(fout, "%c", cur_node->c);
+				fprintf(orig, "%c", cur_node->c);
 				cur_node = root;
+				if (++cur_buff_pos >= orig_size) return orig;
 			}
 		}
 	}
+	return orig;
 }
 
 

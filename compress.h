@@ -14,8 +14,10 @@ typedef
 		unsigned int code;
 	} cano_huff_t;
 
-extern FILE * compress_huffman(FILE *, char ArchiveName[200]);
+extern FILE * compress_huffman(FILE *, unsigned int *, unsigned int *);
 
 extern void generate_codes(cano_huff_t *);
+
+extern int capacity(int a);
 
 #endif

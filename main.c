@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <windows.h>
+//#include <windows.h>
 #include "compress.c"
 
 typedef struct entries{
