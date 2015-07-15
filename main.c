@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <windows.h>
+//#include <windows.h>
 #include "compress.h"
 #include "extract_huff.h"
 
@@ -11,13 +11,13 @@ typedef struct entries{
   unsigned int SizePacked;
   unsigned int SizeOriginal;
   unsigned int Attributes;
-  time_t Time_Created;
-  time_t Time_Modified;
+  unsigned int Time_Created;
+  unsigned int Time_Modified;
   char* FileName;
   FILE* compress_file;
 } enter;
 
-FILE* compress(FILE *fin, unsigned int FileSizeOriginal, unsigned int FileSizePacked);
+FILE * compress(FILE *fin, unsigned int *FileSizeOriginal, unsigned int *FileSizePacked);
 void extract(FILE *fin);
 void archivator(char* argv[], int argc); //Подготавливает данные к архивации и архивирует, если нашелся ключ
 void extractor(); //Подготавливает данные к деархивации и деархивирует, если нашелся ключ
@@ -28,8 +28,8 @@ FILE *fout;
 enter* Files;
 
 int main(int argc, char* argv[]){
-  FILE *fin, *temp, *temp2;
-  int i = 1, j;
+  FILE *temp;
+  int i = 1;
   char c = (int)0;
   char test1[17];
   FileNames = malloc(sizeof(char));
@@ -67,14 +67,14 @@ int main(int argc, char* argv[]){
   return 0;
 }
 
-FILE* compress(FILE *fin, unsigned int FileSizeOriginal, unsigned int FileSizePacked){
+FILE * compress(FILE *fin, unsigned int *FileSizeOriginal, unsigned int *FileSizePacked){
   FILE* temp;
-  temp = compress_huffman(fin, &FileSizeOriginal, &FileSizePacked);
+  temp = compress_huffman(fin, FileSizeOriginal, FileSizePacked);
   return temp;
 }
 
 void extract(FILE *fin){
-  int i, j, d, FileCount;
+  int i, d, FileCount;
   enter* Files;
   char test1[17], test2[10], alg_id[5];
   fgets(test1, 17, fin); fscanf(fin, "\n");
@@ -88,7 +88,7 @@ void extract(FILE *fin){
   Files = malloc(sizeof(enter) * FileCount);
   for(i = 0; i < FileCount; i++){
     fscanf(fin, "%d\n", &Files[i].FileLength);
-    fscanf(fin, "%s\n", &Files[i].FileName);
+    fscanf(fin, "%s\n", Files[i].FileName);
     fscanf(fin, "%d\n", &Files[i].SizePacked);
     fscanf(fin, "%d\n", &Files[i].SizeOriginal);
     fscanf(fin, "%d\n", &Files[i].Attributes);
@@ -103,7 +103,7 @@ void extract(FILE *fin){
 }
 
 void archivator(char* argv[], int argc){
-  int i = 1, count, j;
+  int i = 1, count;
   unsigned int FileSizePacked, FileSizeOriginal;
   char c = (int)1;
   FILE *temp, *fbuf;
@@ -117,7 +117,7 @@ void archivator(char* argv[], int argc){
       break;
     }
     else{
-      realloc(FileNames, sizeof(char) * i);
+      FileNames = realloc(FileNames, sizeof(char) * i);
       FileNames[i-1] = malloc(sizeof(char) * strlen(argv[i]));
       FileNames[i-1] = argv[i];
     }
@@ -144,13 +144,16 @@ void archivator(char* argv[], int argc){
     Files[i].FileLength = strlen(argv[i+1]);
     Files[i].FileName = argv[i+1];
     Files[i].Attributes = 0;
-    Files[i].Time_Created = __TIME__;
-    Files[i].Time_Modified = __TIME__;
+    Files[i].Time_Created = 0;//__TIME__;
+    Files[i].Time_Modified = 0;//__TIME__;
     Files[i].SizePacked = 0;
 
     if (c == 1){
-      while(!feof(temp))
-        fprintf(fbuf, "%c", fscanf(temp, "%c"));
+      char tc;
+      while(!feof(temp)){
+		fscanf(temp, "%c", &tc);
+        fprintf(fbuf, "%c", tc);
+      }
     } else {
         Files[i].compress_file = compress(temp, &FileSizeOriginal, &FileSizePacked);
         Files[i].SizePacked = FileSizePacked;
@@ -181,13 +184,17 @@ void archivator(char* argv[], int argc){
   if (c == 1){
     rewind(Files[0].compress_file);
     while(!feof(Files[0].compress_file)){
-      fprintf(fout, "%c", fscanf(Files[0].compress_file, "%c"));
+	  char tc;
+	  fscanf(Files[0].compress_file, "%c", &tc);
+      fprintf(fout, "%c", tc);
     }
   } else{
       for(i = 0; i < count; i++){
         rewind(Files[i].compress_file);
         while(!feof(Files[i].compress_file)){
-          fprintf(fout, "%c", fscanf(Files[i].compress_file, "%c"));
+		  char tc;
+		  fscanf(Files[i].compress_file, "%c", &tc);
+          fprintf(fout, "%c", tc);
         }
       }
     }
