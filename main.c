@@ -74,32 +74,8 @@ FILE* compress(FILE *fin, unsigned int FileSizeOriginal, unsigned int FileSizePa
 }
 
 void extract(FILE *fin){
-  int i, j, d, FileCount;
-  enter* Files;
-  char test1[17], test2[10], alg_id[5];
-  fgets(test1, 17, fin); fscanf(fin, "\n");
-  fgets(test2, 10, fin); fscanf(fin, "\n");
-  fgets(alg_id, 5, fin); fscanf(fin, "\n");
-  fscanf(fin, "%d", &d);
-  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); return;}
-  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); return;}
-  if (d != 1){printf("Wrong Type Extract... Sorry... I don't extract this file\n"); return;}
-  fscanf(fin,"%d\n", &FileCount);
-  Files = malloc(sizeof(enter) * FileCount);
-  for(i = 0; i < FileCount; i++){
-    fscanf(fin, "%d\n", &Files[i].FileLength);
-    fscanf(fin, "%s\n", &Files[i].FileName);
-    fscanf(fin, "%d\n", &Files[i].SizePacked);
-    fscanf(fin, "%d\n", &Files[i].SizeOriginal);
-    fscanf(fin, "%d\n", &Files[i].Attributes);
-    fscanf(fin, "%d\n", &Files[i].Time_Created);
-    fscanf(fin, "%d\n", &Files[i].Time_Modified);
-  }
-  if(strcmp(alg_id, "HUFF") == 0){
-    for(i = 0; i < FileCount; i++){
-      //extract_huffman(fin, Files[i].SizePached);
-    }
-  }
+
+
 }
 
 void archivator(char* argv[], int argc){
@@ -113,7 +89,6 @@ void archivator(char* argv[], int argc){
     if (argv[i+1][0] == '-'){
       ArchiveName = malloc(sizeof(char) * strlen(argv[i]));
       ArchiveName = argv[i];
-      i++;
       break;
     }
     else{
@@ -169,7 +144,7 @@ void archivator(char* argv[], int argc){
   }
   //Запись в файл
   for(i = 0; i < count; i++){
-    fprintf(fout, "%c\n", Files[i].FileLength);
+    fprintf(fout, "%d\n", Files[i].FileLength);
     fprintf(fout, "%s\n", Files[i].FileName);
     fprintf(fout, "%d\n", Files[i].SizePacked);
     fprintf(fout, "%d\n", Files[i].SizeOriginal);
@@ -194,5 +169,54 @@ void archivator(char* argv[], int argc){
 }
 
 void extractor(){
+  int i, j, d, FileCount, BufLen = 0;
+  char c;
+  enter* Files;
+  FILE *temp, *temp2, *fin;
+  fin = fopen(ArchiveName, "rb");
+  char test1[17], test2[10], alg_id[5];
+  fgets(test1, 17, fin); fscanf(fin, "\n");
+  fgets(test2, 10, fin); fscanf(fin, "\n");
+  fgets(alg_id, 5, fin); fscanf(fin, "\n");
+  fscanf(fin, "%d", &d);
+  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); return;}
+  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); return;}
+  if (d != 1){printf("Wrong Type Extract... Sorry... I don't extract this file\n"); return;}
+  fscanf(fin,"%d\n", &FileCount);
+  Files = malloc(sizeof(enter) * FileCount);
+  for(i = 0; i < FileCount; i++){
+    fscanf(fin, "%d\n", &Files[i].FileLength);
+    fscanf(fin, "%s\n", &Files[i].FileName);
+    fscanf(fin, "%d\n", &Files[i].SizePacked);
+    fscanf(fin, "%d\n", &Files[i].SizeOriginal);
+    fscanf(fin, "%d\n", &Files[i].Attributes);
+    fscanf(fin, "%d\n", &Files[i].Time_Created);
+    fscanf(fin, "%d\n", &Files[i].Time_Modified);
+    BufLen += Files[i].SizeOriginal;
+  }
+   if(strcmp(alg_id, "HUFF") == 0){
+    if (c == 0){
+      for(i = 0; i < FileCount; i++){
+        temp = extract_huffman(fin, Files[i].SizeOriginal);
+        temp2 = fopen(Files[i].FileName, "wb");
+        while (!feof(temp)){
+          fscanf(temp, "%c", &c);
+          fprintf(temp2, "%c", c);
+        }
+        fclose(temp2);
+      }
+    } else {
+        temp = extract_huffman(fin, BufLen);
+        for(i = 0; i < FileCount; i++){
+          temp2 = fopen(Files[i].FileName, "wb");
+          for(j = 0; j < Files[i].SizeOriginal; j++){
+            fscanf(temp, "%c", &c);
+            fprintf(temp2, "%c", c);
+          }
+          fclose(temp2);
+        }
+      }
+
+  }
 
 }
