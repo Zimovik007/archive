@@ -28,19 +28,20 @@ int main(int argc, char* argv[]){
   }
     i = 1;
     int* lengths = malloc(sizeof(int) * (argc - 2));
-    fout = fopen("temp.txt", "w");
+    fout = fopen("temp.txt", "wb");
     while (i < argc - 2){
-      fin = fopen(argv[i], "r");
+      fin = fopen(argv[i], "rb");
       while (fscanf(fin, "%c", &c) != EOF){
         lengths[i]++;
         fprintf(fout, "%c", c);
       }
       i++;
     }
+    fclose(fout);
 
   if (strcmp(argv[argc - 1], "-a") == 0){
-    if (fopen("temp.txt", "rb") != NULL){
-      fin = fopen("temp.txt", "rb");
+    fin = fopen("temp.txt", "rb");
+    if (fin != NULL){
       compress(fin, argv[argc - 2], argc-3);
     } else
         printf("\nCannot find file: %s ", argv[1]);
@@ -88,7 +89,7 @@ void extract(FILE *fin, char FileName[200]){
     fscanf(fin, "\n");
   }
   return;
-  FILE *fout = fopen(FileName, "w");
+  FILE *fout = fopen(FileName, "wb");
   if (strcmp(alg_id, "HUFF")) extract_huffman(fin, fout);
   fclose(fout);
 }

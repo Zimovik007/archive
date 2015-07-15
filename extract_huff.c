@@ -7,7 +7,7 @@
 typedef
 	struct ext_huff_node_t
 	{
-		char c;
+		unsigned char c;
 		struct ext_huff_node_t *left, *right;
 	} ext_huff_node_t;
 	
@@ -16,7 +16,7 @@ static ext_huff_node_t * ext_tree_step(ext_huff_node_t *parent, char bit)
 	return bit ? parent->right : parent->left;
 }
 
-static ext_huff_node_t * ext_create_huff_node(const char c)
+static ext_huff_node_t * ext_create_huff_node(const unsigned char c)
 {
 	ext_huff_node_t *new_node = (ext_huff_node_t*)malloc(sizeof(ext_huff_node_t));
 	new_node->c = c;
@@ -24,7 +24,7 @@ static ext_huff_node_t * ext_create_huff_node(const char c)
 	return new_node;
 }
 
-static ext_huff_node_t * ext_add_huff_node(ext_huff_node_t *parent, int bit, char c)
+static ext_huff_node_t * ext_add_huff_node(ext_huff_node_t *parent, int bit, unsigned char c)
 {
 	ext_huff_node_t *result = NULL;
 	if (bit == 0)
@@ -60,7 +60,7 @@ static void ext_build_huff_tree(cano_huff_t *codes, ext_huff_node_t *root)
 
 extern void extract_huffman(FILE *fin, FILE *fout)
 {
-	ext_huff_node_t *root = ext_create_huff_node((char)0), *cur_node;
+	ext_huff_node_t *root = ext_create_huff_node((unsigned char)0), *cur_node;
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;	
 	for(i = 0; i < CHARS_NUM; i++)
@@ -72,7 +72,7 @@ extern void extract_huffman(FILE *fin, FILE *fout)
 	generate_codes(codes);
 	ext_build_huff_tree(codes, root);
 	
-	char c = 0;
+	unsigned char c = 0;
 	cur_node = root;
 	while (fscanf(fin, "%c", &c) != EOF && cur_node)
 	{
