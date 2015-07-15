@@ -23,3 +23,47 @@ int main(){
 
   return 0;
 }
+
+
+
+
+program project1;
+uses sysutils;
+var
+  inp: file of byte;
+  outp: text;
+  //outp: text;
+  count: word;
+  buf: byte;
+  m: array[0..7] of boolean;
+  a: string;
+  i, j: integer;
+
+begin
+  assign(inp, 'input.txt');
+  assign(outp, 'output.txt');
+  reset(inp);
+  rewrite(outp);
+
+  while not EOF(inp) do
+  begin
+    BlockRead(inp, buf, 1);
+    i := 128;
+    while i >= 1 do
+    begin
+      m[j] := ((buf or i) = buf);
+      inc(j);
+      i := i div 2;
+    end;
+    for i := 0 to 7 do
+      a += inttostr(ord(m[i]));
+
+    Writeln(outp, a);           //Block
+  end;
+  //write({ord(m[i])}  a);
+  //readln;
+  close(inp);
+  close(outp);
+end.
+
+      
