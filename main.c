@@ -7,6 +7,7 @@
 #include "extract_huff.h"
 #include "extract_nope.h"
 #include "comp_nope.h"
+#include "compress_lzw.h"
 
 typedef struct entries{
   unsigned int FileLength;
@@ -31,11 +32,13 @@ enter* Files;
 
 int main(int argc, char* argv[]){
 	
-	/*
-	FILE *fi, *fu, *or, *ar;
-	fi = fopen("test8.in", "rb");
-	fu = fopen("test8.iin", "wb");
+	
+	FILE *fi, *fu;
+	fi = fopen("test4.in", "rb");
+	fu = fopen("test4.iin", "wb");
 	unsigned int ors = 0, ars = 0;
+	compress_lzw(fi, fu, &ors, &ars);
+	/*
 	time_t t = time(NULL);
 	struct tm* ctme = localtime(&t);
 	printf("%02d:%02d:%02d start compress\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
@@ -59,10 +62,11 @@ int main(int argc, char* argv[]){
 		if (fscanf(or, "%c", &tc) <= 0) break;
 		fprintf(fu, "%c", tc);
 	}
+	*/
 	fclose(fi);
 	fclose(fu);
 	return 0;
-	*/
+	
 
   FILE *temp;
   int i = 1;

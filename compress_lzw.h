@@ -9,7 +9,7 @@ typedef
 	{
 		int size;
 		long long *code;
-		int *length_code;
+		int *code_len;
 		char **word;
 		int *word_len;
 	} dictionary_t;
