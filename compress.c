@@ -150,7 +150,8 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, unsigned int *ar
 	
 	while (!feof(orig))
 	{
-		fscanf(orig, "%c", &c);
+		if (fscanf(orig, "%c", &c) <= 0) break;
+		//printf("%c", c);
 		for(j = CHARS_NUM - 1; codes[j].c != c; j--);
 		for(i = codes[j].length - 1; i >= 0; i--)
 		{
@@ -171,6 +172,7 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, unsigned int *ar
 		fprintf(archf, "%c", prin_c);
 		++*archf_size;
 	}
+	//printf("\n");
 }
 
 extern FILE * compress_huffman(FILE *orig, unsigned int *orig_size, unsigned int *archf_size)
