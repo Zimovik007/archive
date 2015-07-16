@@ -151,7 +151,6 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, unsigned int *ar
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;
-		//printf("%c", c);
 		for(j = CHARS_NUM - 1; codes[j].c != c; j--);
 		for(i = codes[j].length - 1; i >= 0; i--)
 		{
@@ -172,7 +171,6 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, unsigned int *ar
 		fprintf(archf, "%c", prin_c);
 		++*archf_size;
 	}
-	//printf("\n");
 }
 
 extern FILE * compress_huffman(FILE *orig, unsigned int *orig_size, unsigned int *archf_size)
@@ -182,9 +180,8 @@ extern FILE * compress_huffman(FILE *orig, unsigned int *orig_size, unsigned int
 	*orig_size = 0;
 	unsigned int *frequency = (unsigned int*)calloc(CHARS_NUM, sizeof(unsigned int));
 	count_frequency(orig, frequency, orig_size);
-	int i;	
-	
-	huff_node_t *root = build_huff_tree(frequency);
+	int i;		
+	huff_node_t *root = build_huff_tree(frequency);	
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 
 	for(i = 0; i < CHARS_NUM; i++)
@@ -195,7 +192,9 @@ extern FILE * compress_huffman(FILE *orig, unsigned int *orig_size, unsigned int
 	}
 	
 	count_lengths_codes(root, codes);
-
+	if (root)
+		if (!root->left && !root->right)
+			codes[(int)root->c].length = 1;
 	generate_codes(codes);
 	
 	codify(orig, codes, archf, archf_size);

@@ -11,7 +11,7 @@ typedef
 	{
 		unsigned char c;
 		int length;
-		unsigned int code;
+		unsigned long long code;
 	} cano_huff_t;
 
 extern FILE * compress_huffman(FILE *, unsigned int *, unsigned int *);

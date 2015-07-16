@@ -287,5 +287,4 @@ void extractor(){
         }
       }
   }
-
 }
