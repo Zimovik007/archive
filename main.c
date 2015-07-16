@@ -5,6 +5,8 @@
 //#include <windows.h>
 #include "compress.h"
 #include "extract_huff.h"
+#include "extract_nope.h"
+#include "comp_nope.h"
 
 typedef struct entries{
   unsigned int FileLength;
