@@ -123,22 +123,12 @@ extern void generate_codes(cano_huff_t *codes)
 	qsort(codes, CHARS_NUM, sizeof(cano_huff_t), compare_chars_alphabet);
 }
 
-int capacity(int a)
-{
-	if (abs(a) < 10) return 1;
-	if (abs(a) < 100) return 2;
-	if (abs(a) < 1000) return 3;
-	return 4;
-}
-
 static void save_tree(FILE *archf, cano_huff_t *codes, unsigned int *archf_size)
 {	
 	int i;
 	for(i = 0; i < CHARS_NUM; i++)
-	{
-		fprintf(archf, "%d ", codes[i].length);
-		*archf_size += capacity(codes[i].length) + 1;
-	}
+		fprintf(archf, "%c", (unsigned char)codes[i].length);
+	*archf_size += (unsigned int)CHARS_NUM;
 }
 
 static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, unsigned int *archf_size)

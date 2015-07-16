@@ -66,7 +66,7 @@ extern FILE * extract_huffman(FILE *archf, unsigned int orig_size)
 	int i;	
 	for(i = 0; i < CHARS_NUM; i++)
 	{
-		fscanf(archf, "%d ", &codes[i].length);
+		fscanf(archf, "%c", &codes[i].length);
 		codes[i].c = (unsigned char)i;
 		codes[i].code = 0;	
 	}

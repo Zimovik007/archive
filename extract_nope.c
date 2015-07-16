@@ -12,6 +12,6 @@ extern FILE * extract_nope(FILE *archf, unsigned int orig_size)
 	{
 		fscanf(archf, "%c", &c);
 		fprintf(orig, "%c", c);
-	}	
+	}
 	return orig;
 }

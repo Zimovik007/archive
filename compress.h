@@ -9,8 +9,7 @@
 typedef
 	struct cano_huff_t
 	{
-		unsigned char c;
-		int length;
+		unsigned char c, length;
 		unsigned long long code;
 	} cano_huff_t;
 
