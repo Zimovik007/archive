@@ -11,8 +11,8 @@ extern FILE * compress_nope(FILE *orig, unsigned int *orig_size, unsigned int *a
 	char c;
 	while (!feof(orig))
 	{
-		if (fscanf(archf, "%c", &c) <= 0) break;
-		fprintf(orig, "%c", c);
+		if (fscanf(orig, "%c", &c) <= 0) break;
+		fprintf(archf, "%c", c);
 		++*orig_size;
 	}
 	*archf_size = *orig_size;
