@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-//#include <windows.h>
 #include "compress.h"
 #include "extract_huff.h"
 #include "extract_nope.h"
 #include "comp_nope.h"
 #include "compress_lzw.h"
+#include "extract_lzw.h"
 
 typedef struct entries{
   unsigned int FileLength;
@@ -21,9 +21,15 @@ typedef struct entries{
 } enter;
 
 FILE * compress(FILE *fin, unsigned int *FileSizeOriginal, unsigned int *FileSizePacked);
-void extract(FILE *fin);
 void archivator(char* argv[], int argc); //Подготавливает данные к архивации и архивирует, если нашелся ключ
 void extractor(); //Подготавливает данные к деархивации и деархивирует, если нашелся ключ
+int GetArchFileNames(char* argv[], int argc);
+char FprintfSolidAndCount(char* argv[], int argc, int count);
+void FPrintFFAT(int count);
+void PrepareFAT(char c, int count, char* argv[]);
+void Compress_Data(char c, int count);
+char* ReadSignFAT(FILE *fin, int *FileCoint, int *BufLen, int *d);
+void Extract(char* alg_id, int d, FILE *fin, int FileCount, int BufLen);
 
 char* ArchiveName;
 char** FileNames;
@@ -31,42 +37,6 @@ FILE *fout;
 enter* Files;
 
 int main(int argc, char* argv[]){
-	
-	
-	FILE *fi, *fu;
-	fi = fopen("test4.in", "rb");
-	fu = fopen("test4.iin", "wb");
-	unsigned int ors = 0, ars = 0;
-	compress_lzw(fi, fu, &ors, &ars);
-	/*
-	time_t t = time(NULL);
-	struct tm* ctme = localtime(&t);
-	printf("%02d:%02d:%02d start compress\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
-	ar = compress_huffman(fi, &ors, &ars);
-	t = time(NULL);
-	ctme = localtime(&t);
-	printf("%02d:%02d:%02d end compress\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
-	rewind(ar);
-	t = time(NULL);
-	ctme = localtime(&t);
-	printf("%02d:%02d:%02d start extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
-	or = extract_huffman(ar, ors);
-	t = time(NULL);
-	ctme = localtime(&t);
-	printf("%02d:%02d:%02d end extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
-	printf("%d B original size\n%d B compressed size\n%d B difference\n", ors, ars, ors-ars);
-	char tc;
-	rewind(or);
-	while (!feof(or))
-	{
-		if (fscanf(or, "%c", &tc) <= 0) break;
-		fprintf(fu, "%c", tc);
-	}
-	*/
-	fclose(fi);
-	fclose(fu);
-	return 0;
-	
 
   FILE *temp;
   int i = 1;
@@ -91,6 +61,8 @@ int main(int argc, char* argv[]){
       break;
     }
     if (strcmp(argv[i], "-e") == 0){
+      ArchiveName = malloc(sizeof(char) * strlen(argv[1]));
+      ArchiveName = argv[1];
       extractor();
       c = 1;
       break;
@@ -101,61 +73,48 @@ int main(int argc, char* argv[]){
     temp = fopen(argv[1], "rb");
     fgets(test1, 17, temp);
     fclose(temp);
-    if (strcmp(test1, "UPA file archive") == 0)extractor();
-    else archivator(argv, argc);
+    if (strcmp(test1, "UPA file archive") == 0){
+      ArchiveName = argv[1];
+      extractor();
+    } else archivator(argv, argc);
   }
   return 0;
 }
 
 FILE * compress(FILE *fin, unsigned int *FileSizeOriginal, unsigned int *FileSizePacked){
   FILE* temp;
-  temp = compress_huffman(fin, FileSizeOriginal, FileSizePacked);
+  temp = compress_nope(fin, FileSizeOriginal, FileSizePacked);
   return temp;
 }
 
-void extract(FILE *fin){
-/*<<<<<<< HEAD
-  int i, d, FileCount;
-  enter* Files;
-  char test1[17], test2[10], alg_id[5];
-  fgets(test1, 17, fin); fscanf(fin, "\n");
-  fgets(test2, 10, fin); fscanf(fin, "\n");
-  fgets(alg_id, 5, fin); fscanf(fin, "\n");
-  fscanf(fin, "%d", &d);
-  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); return;}
-  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); return;}
-  if (d != 1){printf("Wrong Type Extract... Sorry... I don't extract this file\n"); return;}
-  fscanf(fin,"%d\n", &FileCount);
-  Files = malloc(sizeof(enter) * FileCount);
-  for(i = 0; i < FileCount; i++){
-    fscanf(fin, "%d\n", &Files[i].FileLength);
-    fscanf(fin, "%s\n", Files[i].FileName);
-    fscanf(fin, "%d\n", &Files[i].SizePacked);
-    fscanf(fin, "%d\n", &Files[i].SizeOriginal);
-    fscanf(fin, "%d\n", &Files[i].Attributes);
-    fscanf(fin, "%d\n", &Files[i].Time_Created);
-    fscanf(fin, "%d\n", &Files[i].Time_Modified);
-  }
-  if(strcmp(alg_id, "HUFF") == 0){
-    for(i = 0; i < FileCount; i++){
-      //extract_huffman(fin, Files[i].SizePached);
-    }
-  }
-=======
-
-
->>>>>>> 5f0d719fd4b823fbd41de5e607860e3720d86157*/
-}
+//====================================
+//====================================
+//====================================
 
 void archivator(char* argv[], int argc){
-  int i = 1, count;
-  unsigned int FileSizePacked, FileSizeOriginal;
+  int count;
   char c = (int)1;
-  FILE *temp, *fbuf;
-  //<===========БЛОК ДО FAT entries
-  //Считали входные данные и выходные
-  while((argv[i][0] != '-') || (i == argc)){
-    if (argv[i+1][0] == '-'){
+  
+  time_t t = time(NULL);
+  struct tm* ctme = localtime(&t);
+  printf("%02d:%02d:%02d compressing...\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+  
+  count = GetArchFileNames(argv, argc);
+  c = FprintfSolidAndCount(argv, argc, count);
+  Files = malloc(sizeof(enter) * count);
+  PrepareFAT(c, count, argv);
+  FPrintFFAT(count);
+  Compress_Data(c, count);
+  
+  t = time(NULL);
+  ctme = localtime(&t);
+  printf("%02d:%02d:%02d complete\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+}
+
+int GetArchFileNames(char* argv[], int argc){
+  int i = 1;
+  while((i < argc) && (argv[i][0] != '-')){
+    if ((i+1 == argc) || (argv[i+1][0] == '-')){
       ArchiveName = malloc(sizeof(char) * strlen(argv[i]));
       ArchiveName = argv[i];
       break;
@@ -167,21 +126,27 @@ void archivator(char* argv[], int argc){
     }
     i++;
   }
-  count = i - 1;
-  Files = malloc(sizeof(enter) * count);
-  //Начинаем оформлять выходной файл
+  return i - 1;
+}
+
+char FprintfSolidAndCount(char* argv[], int argc, int count){
+  int i;
+  char c = (int)1;
   fout = fopen(ArchiveName, "wb");
   fprintf(fout, "UPA file archive\nsign: UPA\nHUFF\n");
-  //Ищем IsSolid
-  for(i = i; i < argc; i++){
+  for(i = count+1; i < argc; i++){
     if (strcmp(argv[i], "-solid") == 0){c = 1; break;}
     if (strcmp(argv[i], "-nosolid") == 0){c = 0; break;}
   }
-  //Выводи IsSolid и количсетво файлов
   fprintf(fout, "%d\n", (int)c);
   fprintf(fout, "%d\n", count);
-  //<============FAT ENTRIES:
-    //ПОДГОТОВКА информации
+  return c;
+}
+
+void PrepareFAT(char c, int count, char* argv[]){
+  int i;
+  unsigned int FileSizePacked = 0, FileSizeOriginal = 0;
+  FILE *fbuf, *temp;
   fbuf = fopen("temp.txt", "wb");
   for(i = 0; i < count; i++){
     temp = fopen(argv[i+1], "rb");
@@ -192,29 +157,34 @@ void archivator(char* argv[], int argc){
     Files[i].Time_Modified = 0;//__TIME__;
     Files[i].SizePacked = 0;
 
+    Files[i].compress_file = compress_huffman(temp, &FileSizeOriginal, &FileSizePacked);
+    Files[i].SizePacked = FileSizePacked;
+    Files[i].SizeOriginal = FileSizeOriginal;
+    FileSizePacked = 0;
+    FileSizeOriginal = 0;
+
     if (c == 1){
       char tc;
+      rewind(temp);
       while(!feof(temp)){
-		fscanf(temp, "%c", &tc);
-        fprintf(fbuf, "%c", tc);
+		if (fscanf(temp, "%c", &tc) != EOF)
+          fprintf(fbuf, "%c", tc);
       }
-    } else {
-        Files[i].compress_file = compress(temp, &FileSizeOriginal, &FileSizePacked);
-        Files[i].SizePacked = FileSizePacked;
-        FileSizePacked = 0;
-      }
-
-    fseek(temp, 0, SEEK_END);
-    Files[i].SizeOriginal = ftell(temp);
+    }
     fclose(temp);
   }
-  rewind(fbuf);
+  fclose(fbuf);
   if (c == 1){
-    Files[0].compress_file = compress(fbuf, &FileSizeOriginal, &FileSizePacked);
+    fbuf = fopen("temp.txt", "rb");
+    Files[0].compress_file = compress_huffman(fbuf, &FileSizeOriginal, &FileSizePacked);
     Files[0].SizePacked = FileSizePacked;
     FileSizePacked = 0;
+    FileSizeOriginal = 0;
   }
-  //Запись в файл
+}
+
+void FPrintFFAT(int count){
+  int i;
   for(i = 0; i < count; i++){
     fprintf(fout, "%d\n", Files[i].FileLength);
     fprintf(fout, "%s\n", Files[i].FileName);
@@ -224,65 +194,99 @@ void archivator(char* argv[], int argc){
     fprintf(fout, "%d\n", Files[i].Time_Created);
     fprintf(fout, "%d\n", Files[i].Time_Modified);
   }
-  //<==== Сжатые данные
+}
+
+void Compress_Data(char c, int count){
+  int i;
   if (c == 1){
     rewind(Files[0].compress_file);
     while(!feof(Files[0].compress_file)){
 	  char tc;
-	  fscanf(Files[0].compress_file, "%c", &tc);
-      fprintf(fout, "%c", tc);
+	  if (fscanf(Files[0].compress_file, "%c", &tc) != EOF)
+        fprintf(fout, "%c", tc);
     }
   } else{
       for(i = 0; i < count; i++){
         rewind(Files[i].compress_file);
         while(!feof(Files[i].compress_file)){
 		  char tc;
-		  fscanf(Files[i].compress_file, "%c", &tc);
-          fprintf(fout, "%c", tc);
+		  if (fscanf(Files[i].compress_file, "%c", &tc) != EOF)
+            fprintf(fout, "%c", tc);
         }
       }
     }
 }
 
+//======================================
+//======================================
+//======================================
+
 void extractor(){
-  int i, j, d, FileCount, BufLen = 0;
-  char c;
-  enter* Files;
-  FILE *temp, *temp2, *fin;
+  int d = 0 , FileCount = 0, BufLen = 0;
+  char* alg_id;
+  alg_id = malloc(sizeof(char) * 5);
+  FILE *fin;
   fin = fopen(ArchiveName, "rb");
-  char test1[17], test2[10], alg_id[5];
+  
+  time_t t = time(NULL);
+  struct tm* ctme = localtime(&t);
+  printf("%02d:%02d:%02d extracting...\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+  
+  alg_id = ReadSignFAT(fin, &FileCount, &BufLen, &d);
+  Extract(alg_id, d, fin, FileCount, BufLen);
+  
+  t = time(NULL);
+  ctme = localtime(&t);
+  printf("%02d:%02d:%02d complete\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+}
+
+char* ReadSignFAT(FILE *fin, int* FileCount, int* BufLen, int* d){
+  int i;
+  char test1[17], test2[10];
+  char* alg_id;
+  alg_id = malloc(sizeof(char) * 5);
   fgets(test1, 17, fin); fscanf(fin, "\n");
   fgets(test2, 10, fin); fscanf(fin, "\n");
   fgets(alg_id, 5, fin); fscanf(fin, "\n");
-  fscanf(fin, "%d", &d);
-  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); return;}
-  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); return;}
-  if (d != 1){printf("Wrong Type Extract... Sorry... I don't extract this file\n"); return;}
-  fscanf(fin,"%d\n", &FileCount);
-  Files = malloc(sizeof(enter) * FileCount);
-  for(i = 0; i < FileCount; i++){
+  fscanf(fin, "%d", d);
+  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); exit(0);}
+  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); exit(0);}
+  fscanf(fin,"%d\n", FileCount);
+  Files = malloc(sizeof(enter) * (*FileCount));
+  for(i = 0; i < *FileCount; i++){
     fscanf(fin, "%d\n", &Files[i].FileLength);
-    fscanf(fin, "%s\n", Files[i].FileName);
+    Files[i].FileName = malloc(sizeof(char) * Files[i].FileLength);
+    fscanf(fin, "%s", Files[i].FileName);
     fscanf(fin, "%d\n", &Files[i].SizePacked);
     fscanf(fin, "%d\n", &Files[i].SizeOriginal);
     fscanf(fin, "%d\n", &Files[i].Attributes);
     fscanf(fin, "%d\n", &Files[i].Time_Created);
     fscanf(fin, "%d\n", &Files[i].Time_Modified);
-    BufLen += Files[i].SizeOriginal;
+    *BufLen += Files[i].SizeOriginal;
   }
-   if(strcmp(alg_id, "HUFF") == 0){
-    if (c == 0){
+  return alg_id;
+}
+
+void Extract(char* alg_id, int d, FILE *fin, int FileCount, int BufLen){
+  int i, j;
+  char c;
+  FILE *temp, *temp2;
+  if(strcmp(alg_id, "HUFF") == 0){
+    if (d == 0){
       for(i = 0; i < FileCount; i++){
         temp = extract_huffman(fin, Files[i].SizeOriginal);
         temp2 = fopen(Files[i].FileName, "wb");
+        rewind(temp);
         while (!feof(temp)){
-          fscanf(temp, "%c", &c);
-          fprintf(temp2, "%c", c);
+          if (fscanf(temp, "%c", &c) != EOF)
+            fprintf(temp2, "%c", c);
         }
         fclose(temp2);
+        fclose(temp);
       }
     } else {
         temp = extract_huffman(fin, BufLen);
+        rewind(temp);
         for(i = 0; i < FileCount; i++){
           temp2 = fopen(Files[i].FileName, "wb");
           for(j = 0; j < Files[i].SizeOriginal; j++){
@@ -291,6 +295,43 @@ void extractor(){
           }
           fclose(temp2);
         }
+        fclose(temp);
       }
   }
+  return;
 }
+
+/*
+FILE *fi, *fu;
+	fi = fopen("test1.out", "rb");
+	fu = fopen("test1.iin", "wb");
+	unsigned int ors = 0, ars = 0;
+	time_t t = time(NULL);
+	struct tm* ctme = localtime(&t);
+	printf("%02d:%02d:%02d start extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+	extract_lzw(fi, fu, ars + 100);
+	t = time(NULL);
+	ctme = localtime(&t);
+	printf("%02d:%02d:%02d end extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+	ar = compress_huffman(fi, &ors, &ars);
+	
+	rewind(ar);
+	t = time(NULL);
+	ctme = localtime(&t);
+	printf("%02d:%02d:%02d start extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+	or = extract_huffman(ar, ors);
+	t = time(NULL);
+	ctme = localtime(&t);
+	printf("%02d:%02d:%02d end extract\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
+	printf("%d B original size\n%d B compressed size\n%d B difference\n", ors, ars, ors-ars);
+	char tc;
+	rewind(or);
+	while (!feof(or))
+	{
+		if (fscanf(or, "%c", &tc) <= 0) break;
+		fprintf(fu, "%c", tc);
+	}
+	fclose(fi);
+	fclose(fu);
+	return 0;
+*/

@@ -3,9 +3,9 @@
 #include <string.h>
 #include "compress_lzw.h"
 	
-int current_code_len = 8;	
+int current_code_len;	
 
-static dictionary_t * create_dict()
+extern dictionary_t * create_dict()
 {
 	dictionary_t *new_dict = (dictionary_t*)malloc(sizeof(dictionary_t));
 	new_dict->size = 0;
@@ -16,7 +16,7 @@ static dictionary_t * create_dict()
 	return new_dict;	
 }
 
-static string_t * create_str()
+extern string_t * create_str()
 {
 	string_t *new_str = (string_t*)malloc(sizeof(string_t));
 	new_str->length = 0;
@@ -26,11 +26,10 @@ static string_t * create_str()
 static void append(string_t *str, char c)
 {
 	int length = ++str->length;
-	str->chars[length] = '\0';
 	str->chars[length - 1] = c;	
 }
 
-static void assign(string_t *str, char c)
+extern void assign(string_t *str, char c)
 {
 	str->length = 1;
 	str->chars[0] = c;
@@ -43,7 +42,29 @@ static int is_two_degree(int a)
 	return 0;
 }
 
-static void add_to_dictionary(dictionary_t *dict, string_t *str)
+/*
+static int power(int a, int b)
+{
+	int result = 1;
+	while (b)
+	{
+		if (b & 1) result *= a;
+		b >>= 1;
+		a *= a;
+	}
+	return result;
+}
+
+static int s_hash(string_t *str)
+{
+	int i, result = 0;
+	for(i = 0; i < str->length; i++)
+		result += power((int)str->chars[i], i + 1);	
+	return result;
+}
+*/
+
+extern void add_to_dictionary(dictionary_t *dict, string_t *str)
 {
 	int size = ++dict->size;
 	if (is_two_degree(size - 1)) ++current_code_len;
@@ -59,7 +80,7 @@ static void add_to_dictionary(dictionary_t *dict, string_t *str)
 	dict->word_len[size - 1] = str->length;
 }
 
-static int dict_str_id(dictionary_t *dict, string_t *str)
+extern int dict_str_id(dictionary_t *dict, string_t *str)
 {
 	int i, j, equal = 1;
 	for(i = 0; i < dict->size; i++)
@@ -74,20 +95,21 @@ static int dict_str_id(dictionary_t *dict, string_t *str)
 
 extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsigned int *archf_size)
 {
+	current_code_len = 8;
 	dictionary_t *dict = create_dict();
 	string_t *str = create_str();
 	int i;
-	for(i = 0; i < 256; i++)
+	for(i = 0; i < CHARS_NUM; i++)
 	{
 		assign(str, (char)i);
 		add_to_dictionary(dict, str);		
-	}
-	
+	}	
 	int prev_id, t, k = 7, code, bit;
 	char c, prin_c = (char)0;
 	fscanf(orig, "%c", &c); 
 	for(i = 0; (char)i != c; prev_id = ++i);
 	rewind(orig);
+	str->length = 0;
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;
@@ -120,4 +142,7 @@ extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsig
 		fprintf(archf, "%c", prin_c);
 		++*archf_size;
 	}	
+	printf("%d\n", dict->size);
+	for(i = 256; i < dict->size; i++)
+		printf("%s %d\n", dict->word[i], dict->word_len[i]);
 }
