@@ -137,10 +137,16 @@ int identify_action(char **files, int *file_exists, int filescount)
 {
 	for(int i = 0; i < filescount; i++)
 	{
-		
-		
+		if (!file_exists[i]) continue;
+		FILE *file = fopen(files[i], "rb");
+		if (!f_is_upa(file))
+		{
+			fclose(file);
+			return 1;
+		}
+		fclose(file);
 	}
-	return 1;
+	return 0;
 }
 
 int main(int argc, char* argv[])
