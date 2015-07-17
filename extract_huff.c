@@ -1,63 +1,105 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compress.h"
+#include "extract_huff.h"
 
 typedef
-	struct huff_node_t
+	struct ext_huff_node_t
 	{
-		char c;
-		struct huff_node_t *left, *right;
-	} huff_node_t;
+		unsigned char c;
+		struct ext_huff_node_t *left, *right;
+	} ext_huff_node_t;
 	
-static huff_node_t * find_parent(huff_node_t *parent, char bit)
+static ext_huff_node_t * ext_tree_step(ext_huff_node_t *parent, int bit)
 {
-	if (bit == '0')
-		return parent->left ? find_parent(parent->left, bit) : parent;
-	else 
-	if (bit == '1')
-		return parent->right ? find_parent(parent->right, bit) : parent;
-	else 
-		return NULL;
+	return bit ? parent->right : parent->left;
 }
 
-static huff_node_t * create_huff_node(const char c)
+static ext_huff_node_t * ext_create_huff_node(const unsigned char c)
 {
-	huff_node_t *new_node = (huff_node_t*)malloc(sizeof(huff_node_t));
+	ext_huff_node_t *new_node = (ext_huff_node_t*)malloc(sizeof(ext_huff_node_t));
 	new_node->c = c;
-	new_node->left = new_node->right = NULL;
+	new_node->left = NULL;
+	new_node->right = NULL;
 	return new_node;
 }
 
-static huff_node_t * add_huff_node(huff_node_t *root, char bit, char c)
+static ext_huff_node_t * ext_add_huff_node(ext_huff_node_t *parent, int bit, unsigned char c)
 {
-	huff_node_t *parent = find_parent(root, bit), *result;
-	if (bit == '0')
-		result = parent->left ? parent->left : parent->left = create_huff_node(c);
-	else if (bit == '1')
-		result = parent->right ? parent->right : parent->right = create_huff_node(c);
+	ext_huff_node_t *result = NULL;
+	if (bit == 0)
+	{
+		if (!parent->left)
+			parent->left = ext_create_huff_node(c);			
+		result = parent->left;
+	}
+	else 
+	if (bit == 1)
+	{
+		if (!parent->right)
+			parent->right = ext_create_huff_node(c);
+		result = parent->right;
+	}
 	return result;
 }
 
-extern void extract_huffman(FILE *fin)
+static void ext_build_huff_tree(cano_huff_t *codes, ext_huff_node_t *root)
 {
-	double b_count;
-	fscanf(fin, "%lf\n", &b_count);
-	long unsigned int bits_count = (int)b_count;
-	huff_node_t *root = (huff_node_t*)malloc(sizeof(huff_node_t));
-	root->left = root->right = NULL;
-	root->c = (char)0;
-	int key_leng = 1, i;
-	char c, bit;
-	huff_node_t *cur_node = root;
-	while (key_leng != 0)
+	int i, j, bit;
+	ext_huff_node_t *cur_node;
+	for(i = 0; i < CHARS_NUM; i++)
 	{
 		cur_node = root;
-		fscanf(fin, "%d %c", &key_leng, &c);
-		for(i = 0; i < key_leng; i++)
+		for(j = codes[i].length - 1; j >= 0; j--)
 		{
-			fscanf(fin, "%c", &bit);
-			cur_node = add_huff_node(cur_node, bit, c);			
+			bit = (codes[i].code & (1 << j)) != 0;
+			cur_node = ext_add_huff_node(cur_node, bit, j == 0 ? codes[i].c : (unsigned char)0);
+		}	
+	}
+}
+
+extern FILE * extract_huffman(FILE *archf, unsigned int orig_size)
+{
+	ext_huff_node_t *root = ext_create_huff_node((unsigned char)0), *cur_node;
+	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
+	int i;	
+	for(i = 0; i < CHARS_NUM; i++)
+	{
+		fscanf(archf, "%c", &codes[i].length);
+		codes[i].c = (unsigned char)i;
+		codes[i].code = 0;	
+	}
+	generate_codes(codes);
+	ext_build_huff_tree(codes, root);
+	FILE *orig = tmpfile();
+	unsigned char c = 0;
+	cur_node = root;
+	unsigned int cur_buff_pos = 0;
+	while (!feof(archf) && cur_buff_pos < orig_size)
+	{
+		fscanf(archf, "%c", &c);
+		for(i = 1; i <= 128; i = i << 1)
+		{
+			cur_node = ext_tree_step(cur_node, (c & i) == i);
+			if (!cur_node) break;
+			if (!cur_node->left && !cur_node->right)
+			{
+				fprintf(orig, "%c", cur_node->c);
+				cur_node = root;
+				if (++cur_buff_pos >= orig_size) return orig;
+			}
 		}
 	}
-		
+	return orig;
 }
+
+
+
+
+
+
+
+
+
+
