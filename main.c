@@ -49,7 +49,6 @@ int main(int argc, char* argv[]){
   FILE *temp;
   int  i = 1;
   char c = (int)0;
-  char test1[4];
   FileNames = malloc(sizeof(char));
 
 
@@ -241,7 +240,6 @@ void Extract(){
 
 char* read_signature_files(FILE *fin, int* FileCount, int* BufLen, int* d){
   int   i, sign;
-  char  test1[5];
   char* alg_id;
   alg_id = malloc(sizeof(char) * 4);
 
@@ -254,7 +252,6 @@ char* read_signature_files(FILE *fin, int* FileCount, int* BufLen, int* d){
 
   for(i = 0; i < *FileCount; i++){
     Files[i].FileLength = f_fname_len(fin);
-    Files[i].FileName = malloc(sizeof(char) * Files[i].FileLength);
     Files[i].FileName = f_fname(fin, Files[i].FileLength);
     Files[i].SizePacked = f_int_read(fin, 8);
     Files[i].SizeOriginal = f_int_read(fin, 8);
@@ -270,11 +267,12 @@ void extract(char* alg_id, int d, FILE *fin, int FileCount, int BufLen){
   int  i, j;
   char c;
   FILE *temp, *temp2;
-  printf("%s\n", alg_id);
   if (strcmp(alg_id, "HUFF") == 0){
     if (d == 0){
       for (i = 0; i < FileCount; i++){
         temp = extract_huffman(fin, Files[i].SizeOriginal);
+        Files[i].FileName = (char*)realloc(Files[i].FileName, (Files[i].FileLength + 1)*sizeof(char));
+        Files[i].FileName[Files[i].FileLength] = '\0';
         temp2 = fopen(Files[i].FileName, "wb");
         rewind(temp);
         while (!feof(temp)){
@@ -288,6 +286,8 @@ void extract(char* alg_id, int d, FILE *fin, int FileCount, int BufLen){
         temp = extract_huffman(fin, BufLen);
         rewind(temp);
         for (i = 0; i < FileCount; i++){
+          Files[i].FileName = (char*)realloc(Files[i].FileName, (Files[i].FileLength + 1)*sizeof(char));
+          Files[i].FileName[Files[i].FileLength] = '\0';
           temp2 = fopen(Files[i].FileName, "wb");
           for (j = 0; j < Files[i].SizeOriginal; j++){
             fscanf(temp, "%c", &c);
@@ -303,8 +303,9 @@ void extract(char* alg_id, int d, FILE *fin, int FileCount, int BufLen){
 
 
 void print_bin_header(FILE *fout, int files_count, int is_solid){
-  fprintf(fout, "UPAHUFF%c", is_solid);
-  int i, j, bit;
+  fprintf(fout, "UPAHUFF%c", (char)is_solid);
+  int i, j;
+  char bit;
   unsigned short int f_count = (unsigned short int)files_count;
   for(i = 1; i >= 0; i--){
     char c = 0;
@@ -347,7 +348,7 @@ void print_bin_fat_entry(FILE *fout, int fname_len, char *fname, int packed_size
 
 
 int f_is_upa(FILE *fin){
-  char u, p, a, c;
+  char u, p, a;
   fscanf(fin, "%c%c%c", &u, &p, &a);
   return u == 'U' && p == 'P' && a == 'A';
 }
