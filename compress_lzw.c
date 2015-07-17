@@ -141,8 +141,5 @@ extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsig
 	{
 		fprintf(archf, "%c", prin_c);
 		++*archf_size;
-	}	
-	printf("%d\n", dict->size);
-	for(i = 256; i < dict->size; i++)
-		printf("%s %d\n", dict->word[i], dict->word_len[i]);
+	}
 }

@@ -15,7 +15,7 @@ typedef
 		char **word;
 		int *word_len;
 	} dictionary_t;
-		
+
 typedef
 	struct string_t
 	{
