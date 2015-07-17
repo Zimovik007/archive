@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "../Archive/compress.h"
-#include "../Archive/extract_huff.h"
-#include "../Archive/extract_nope.h"
-#include "../Archive/comp_nope.h"
+#include "compress.h"
+#include "extract_huff.h"
+#include "extract_nope.h"
+#include "comp_nope.h"
 //#include "compress_lzw.h"
 //#include "extract_lzw.h"
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
   FILE *temp;
   int  i = 1;
   char c = (int)0;
-  char test1[17];
+  char test1[4];
   FileNames = malloc(sizeof(char));
 
 
@@ -72,9 +72,9 @@ int main(int argc, char* argv[]){
   //Если отсутствует ключ то мы ищем сигнатуру в первом файле
   if (c == 0){
     temp = fopen(argv[1], "rb");
-    fgets(test1, 17, temp);
+    fgets(test1, 4, temp);
     fclose(temp);
-    if (strcmp(test1, "UPA file archive") == 0){
+    if (strcmp(test1, "UPA") == 0){
       ArchiveName = argv[1];
       Extract();
     } else Archive(argv, argc);
@@ -128,7 +128,7 @@ char print_solid_count(char* argv[], int argc, int count){
   int i;
   char c = (int)1;
   fout = fopen(ArchiveName, "wb");
-  fprintf(fout, "UPA file archive\nsign: UPA\nHUFF\n");
+  fprintf(fout, "UPA\nHUFF\n");
   for (i = count+1; i < argc; i++){
     if (strcmp(argv[i], "-solid") == 0){c = 1; break;}
     if (strcmp(argv[i], "-nosolid") == 0){c = 0; break;}
@@ -195,9 +195,7 @@ void print_compress_data(char c, int count){
   int i;
   if (c == 1){
     rewind(Files[0].compress_file);
-    printf("2\n");
     while (!feof(Files[0].compress_file)){
-      printf("3\n");
 	  char tc;
 	  if (fscanf(Files[0].compress_file, "%c", &tc) != EOF)
         fprintf(fout, "%c", tc);
@@ -240,15 +238,13 @@ void Extract(){
 
 char* read_signature_files(FILE *fin, int* FileCount, int* BufLen, int* d){
   int   i;
-  char  test1[17], test2[10];
+  char  test1[4];
   char* alg_id;
   alg_id = malloc(sizeof(char) * 5);
-  fgets(test1, 17, fin); fscanf(fin, "\n");
-  fgets(test2, 10, fin); fscanf(fin, "\n");
+  fgets(test1, 4, fin); fscanf(fin, "\n");
   fgets(alg_id, 5, fin); fscanf(fin, "\n");
   fscanf(fin, "%d", d);
-  if (strcmp(test1, "UPA file archive") != 0){printf("Wrong Format File!\n"); exit(0);}
-  if (strcmp(test2, "sign: UPA") != 0){printf("Wrong Format File!\n"); exit(0);}
+  if (strcmp(test1, "UPA") != 0){printf("Wrong Format File!\n"); exit(0);}
   fscanf(fin,"%d\n", FileCount);
   Files = malloc(sizeof(entry) * (*FileCount));
   for(i = 0; i < *FileCount; i++){
