@@ -59,7 +59,7 @@ static void ext_build_huff_tree(cano_huff_t *codes, ext_huff_node_t *root)
 	}
 }
 
-extern FILE * extract_huffman(FILE *archf, unsigned int orig_size)
+extern FILE * extract_huffman(FILE *archf, filesize_t orig_size)
 {
 	ext_huff_node_t *root = ext_create_huff_node((unsigned char)0), *cur_node;
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
@@ -75,7 +75,7 @@ extern FILE * extract_huffman(FILE *archf, unsigned int orig_size)
 	FILE *orig = tmpfile();
 	unsigned char c = 0;
 	cur_node = root;
-	unsigned int cur_buff_pos = 0;
+	filesize_t cur_buff_pos = 0;
 	while (!feof(archf) && cur_buff_pos < orig_size)
 	{
 		fscanf(archf, "%c", &c);

@@ -9,9 +9,29 @@
 #include "compress_lzw.h"
 #include "extract_lzw.h"
 
-typedef
-	unsigned long long filesize_t;
+#define COMPR (keys[(int)'c'])
+#define DEL_IN (keys[(int)'d'])
+#define EXTR (keys[(int)'e'])
+#define NO_INF (keys[(int)'n'])
+#define SOLID (keys[(int)'s'])
+#define SH_TIME (keys[(int)'t'])
+/*
+ * COMPR = compress
+ * DEL_IN = delete input files
+ * EXTR = extract
+ * NO_INF = no information
+ * SOLID = solid
+ * SH_TIME = show time
+ */
 	
+int keys[CHARS_NUM];
+ 
+struct tm * gettime()
+{
+	time_t t = time(NULL);
+	struct tm *ctme = localtime(&t);
+	return ctme;
+}
 
 void print_bin_header(FILE *fout, int files_count, int is_solid)
 {
@@ -116,25 +136,98 @@ void f_read_attributes(FILE *fin)
 	fscanf(fin, "%c%c%c%c%c", &c, &c, &c, &c, &c);
 }
 
-void add_to_list(char **list, char *filename, int filescount)
+char ** add_to_list(char **files, char *filename, int *filescount)
 {
-	list = (char**)realloc(list, filescount * sizeof(char*));
-	list[filescount - 1] = filename;
+	if (strlen(filename) == 1 && (filename[0] == '\\' || filename[0] == '>')) return files;
+	++*filescount;
+	files = (char**)realloc(files, *filescount * sizeof(char*));
+	files[*filescount - 1] = filename;
+	return files;
+}
+
+void read_block(char *buffer, FILE *stream)
+{
+	
+
+	return;
+}
+
+void print_time(char *str_before, char *str_after)
+{
+	if (!SH_TIME || NO_INF) return;
+	struct tm *t;
+	t = gettime();
+	printf("%s%02d:%02d:%02d%s", str_before, t->tm_hour, t->tm_min, t->tm_sec, str_after);
+}
+
+void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id)
+{
+	const int BLOCK_LEN = 4096;
+	for(int i = 0; i < filescount; i++)
+	{
+		if (!file_exists[i] || i == newfile_id) continue;
+		FILE *orig = fopen(files[i], "rb");
+		print_time("", " ");
+		if (!NO_INF) printf("  %s", files[i]);
+		fflush(stdout);
+		filesize_t orig_size, compressed_size;
+		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
+		void *buf = malloc(BLOCK_LEN);
+		rewind(filebuf);
+		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);
+		int left_to_write = compressed_size;
+		while (left_to_write > 0)
+		{
+			fread(buf, 1, left_to_write >= BLOCK_LEN ? BLOCK_LEN : left_to_write, filebuf);
+			fwrite(buf, 1, left_to_write >= BLOCK_LEN ? BLOCK_LEN : left_to_write, archf);
+			left_to_write -= BLOCK_LEN;
+		}
+		fclose(orig);
+		if (!NO_INF) printf(" +\n");
+	}	
 }
 
 void compress(char **files, int *file_exists, int filescount)
 {
-	
+	FILE *archf = NULL;
+	print_time("", " ");
+	if (!NO_INF) printf(" compressing files:\n");
+	int exist_count = 0, newfile_id = -1;
+	for(int i = filescount - 1; i >= 0; i--)
+	{
+		if (files[i][0] == '>' && newfile_id == -1)
+			newfile_id = i;
+		if (files[i][0] == '\\' || files[i][0] == '>')
+			files[i] = files[i] + 1;
+	}
+	if (newfile_id == -1)
+		for(int i = filescount - 1; i >= 0 && file_exists[i]; newfile_id = --i);
+	for(int i = 0; i < filescount; exist_count += !!file_exists[i] && i++ != newfile_id);
+	if (newfile_id == -1)
+	{
+		struct tm *t = gettime();
+		char curtime[40];
+		strftime(curtime, 40, "arch_%Y-%m-%d_%X.upa", t);
+		archf = fopen(curtime, "wb");
+	}
+	else
+		archf = fopen(files[newfile_id], "wb");
+		
+	print_bin_header(archf, exist_count, 0);
+	compress_nosolid(archf, files, file_exists, filescount, newfile_id);
+	fclose(archf);
+	print_time("", " ");
+	if (!NO_INF) printf(" compete\n");
 }
 
 void extract(char **files, int *file_exists, int filescount)
 {
-	
-	
+	//printf("extract\n");
 }
 
 int identify_action(char **files, int *file_exists, int filescount)
 {
+	const int COMPRESS = 1, EXTRACT = 0;
 	for(int i = 0; i < filescount; i++)
 	{
 		if (!file_exists[i]) continue;
@@ -142,37 +235,39 @@ int identify_action(char **files, int *file_exists, int filescount)
 		if (!f_is_upa(file))
 		{
 			fclose(file);
-			return 1;
+			return COMPRESS;
 		}
 		fclose(file);
 	}
-	return 0;
+	return EXTRACT;
 }
 
 int main(int argc, char* argv[])
 {
-	int *keys = calloc(CHARS_NUM, sizeof(int)), filescount = 0;
+	int filescount = 0;
 	char **files = NULL;
 	for(int i = 1; i < argc; i++)
 	{
 		if (strlen(argv[i]) >= 2 && argv[i][0] == '-')
 			keys[(int)argv[i][1]] = 1;
 		else
-			add_to_list(files, argv[i], ++filescount);
+		{
+			files = add_to_list(files, argv[i], &filescount);
+		}
 	}
-
+	
 	int *file_exists = malloc(filescount * sizeof(int));
-	for(int i = 1; i < filescount; i++)
+	for(int i = 0; i < filescount; i++)
 	{
 		FILE *file = fopen(files[i], "rb");
 		file_exists[i] = !!file;
 		if (file) fclose(file);
 	}
 	
-	if (keys[(int)'d'] && !keys[(int)'e'])
+	if (COMPR && !EXTR)
 		compress(files, file_exists, filescount);
 	else
-	if (!keys[(int)'d'] && keys[(int)'e'])
+	if (!COMPR && EXTR)
 		extract(files, file_exists, filescount);
 	else
 	{
@@ -180,16 +275,7 @@ int main(int argc, char* argv[])
 			compress(files, file_exists, filescount);
 		else
 			extract(files, file_exists, filescount);
-	}		
+	}
 	
 	return 0;
 }
-
-/*
-void archive(char* argv[], int argc)
-{
-	time_t t = time(NULL);
-	struct tm* ctme = localtime(&t);
-	printf("%02d:%02d:%02d compressing...\n", ctme->tm_hour, ctme->tm_min, ctme->tm_sec);
-}
-*/

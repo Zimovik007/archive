@@ -3,6 +3,6 @@
 
 #include <stdlib.h>
 
-extern FILE * extract_huffman(FILE *, unsigned int);
+extern FILE * extract_huffman(FILE *, filesize_t original_size);
 
 #endif
