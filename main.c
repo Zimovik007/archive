@@ -15,6 +15,7 @@
 #define NO_INF (keys[(int)'n'])
 #define SOLID (keys[(int)'s'])
 #define SH_TIME (keys[(int)'t'])
+#define SV_SYM ('=')
 /*
  * COMPR = compress
  * DEL_IN = delete input files
@@ -23,8 +24,9 @@
  * SOLID = solid
  * SH_TIME = show time
  */
-	
+const int COMPRESS = 1, EXTRACT = 0;	
 int keys[CHARS_NUM];
+
  
 struct tm * gettime()
 {
@@ -58,7 +60,7 @@ void print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t pack
 	filesize_t p_size = packed_size;
 	filesize_t o_size = orig_size;
 	fprintf(fout, "%c", (unsigned char)fname_len);
-	for(i = 0; i < fname_len; i++)
+	for(i = 0; i < fname_len + 1; i++)
 		fprintf(fout, "%c", fname[i]);
 	//packed size
 	for(i = 7; i >= 0; i--){
@@ -100,7 +102,7 @@ int f_fname_len(FILE *fin)
 {
 	unsigned char c;
 	fscanf(fin, "%c", &c);
-	return (int)c;
+	return (int)c + 1;
 }
 
 char* f_fname(FILE *fin, int fname_len)
@@ -138,7 +140,7 @@ void f_read_attributes(FILE *fin)
 
 char ** add_to_list(char **files, char *filename, int *filescount)
 {
-	if (strlen(filename) == 1 && (filename[0] == '\\' || filename[0] == '>')) return files;
+	if (strlen(filename) == 1 && filename[0] == SV_SYM) return files;
 	++*filescount;
 	files = (char**)realloc(files, *filescount * sizeof(char*));
 	files[*filescount - 1] = filename;
@@ -161,7 +163,7 @@ void print_time(char *str_before, char *str_after)
 }
 
 void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id)
-{
+{	
 	const int BLOCK_LEN = 4096;
 	for(int i = 0; i < filescount; i++)
 	{
@@ -174,7 +176,7 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
 		void *buf = malloc(BLOCK_LEN);
 		rewind(filebuf);
-		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);
+		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);		
 		int left_to_write = compressed_size;
 		while (left_to_write > 0)
 		{
@@ -190,44 +192,45 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 void compress(char **files, int *file_exists, int filescount)
 {
 	FILE *archf = NULL;
+	char *archname;
 	print_time("", " ");
 	if (!NO_INF) printf(" compressing files:\n");
 	int exist_count = 0, newfile_id = -1;
 	for(int i = filescount - 1; i >= 0; i--)
-	{
-		if (files[i][0] == '>' && newfile_id == -1)
+		if (files[i][0] == SV_SYM && newfile_id == -1)
+		{
 			newfile_id = i;
-		if (files[i][0] == '\\' || files[i][0] == '>')
 			files[i] = files[i] + 1;
-	}
+			break;
+		}
 	if (newfile_id == -1)
 		for(int i = filescount - 1; i >= 0 && file_exists[i]; newfile_id = --i);
-	for(int i = 0; i < filescount; exist_count += !!file_exists[i] && i++ != newfile_id);
+	for(int i = 0; i < filescount; i++)
+		exist_count += !!file_exists[i] && i != newfile_id;
 	if (newfile_id == -1)
 	{
 		struct tm *t = gettime();
-		char curtime[40];
-		strftime(curtime, 40, "arch_%Y-%m-%d_%X.upa", t);
-		archf = fopen(curtime, "wb");
+		archname = (char*)calloc(50, sizeof(char));
+		strftime(archname, 50, "arch_%Y-%m-%d_%X.upa", t);
 	}
 	else
-		archf = fopen(files[newfile_id], "wb");
-		
+		archname = files[newfile_id];	
+	archf = fopen(archname, "wb");		
 	print_bin_header(archf, exist_count, 0);
-	compress_nosolid(archf, files, file_exists, filescount, newfile_id);
+	if (!SOLID)
+		compress_nosolid(archf, files, file_exists, filescount, newfile_id);
 	fclose(archf);
 	print_time("", " ");
-	if (!NO_INF) printf(" compete\n");
+	if (!NO_INF) printf(" compete -> %s\n", archname);
 }
 
 void extract(char **files, int *file_exists, int filescount)
 {
-	//printf("extract\n");
+	printf("extract\n");
 }
 
 int identify_action(char **files, int *file_exists, int filescount)
 {
-	const int COMPRESS = 1, EXTRACT = 0;
 	for(int i = 0; i < filescount; i++)
 	{
 		if (!file_exists[i]) continue;
@@ -271,11 +274,10 @@ int main(int argc, char* argv[])
 		extract(files, file_exists, filescount);
 	else
 	{
-		if (identify_action(files, file_exists, filescount))
+		if (identify_action(files, file_exists, filescount) == COMPRESS)
 			compress(files, file_exists, filescount);
 		else
 			extract(files, file_exists, filescount);
 	}
-	
 	return 0;
 }
