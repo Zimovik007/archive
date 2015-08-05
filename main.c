@@ -254,9 +254,7 @@ int main(int argc, char* argv[])
 		if (strlen(argv[i]) >= 2 && argv[i][0] == '-')
 			keys[(int)argv[i][1]] = 1;
 		else
-		{
 			files = add_to_list(files, argv[i], &filescount);
-		}
 	}
 	
 	int *file_exists = malloc(filescount * sizeof(int));
