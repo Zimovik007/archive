@@ -1,0 +1,83 @@
+# depslib dependency file v1.0
+1438740912 source:c:\projects\archiver\comp_nope.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"comp_nope.h"
+
+1438740912 c:\projects\archiver\comp_nope.h
+	<stdio.h>
+
+1438740912 source:c:\projects\archiver\compress.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"priority_queue.h"
+	"compress.h"
+
+1438740912 c:\projects\archiver\priority_queue.h
+	<stdlib.h>
+
+1438740912 c:\projects\archiver\compress.h
+	<stdlib.h>
+
+1438740912 source:c:\projects\archiver\compress_lzw.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"compress_lzw.h"
+
+1438740912 c:\projects\archiver\compress_lzw.h
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	"compress.h"
+
+1438740912 source:c:\projects\archiver\extract_huff.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"compress.h"
+	"extract_huff.h"
+
+1438740912 c:\projects\archiver\extract_huff.h
+	<stdlib.h>
+
+1438740912 source:c:\projects\archiver\extract_lzw.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"extract_lzw.h"
+	"compress_lzw.h"
+
+1438740912 c:\projects\archiver\extract_lzw.h
+	<stdlib.h>
+
+1438740912 source:c:\projects\archiver\extract_nope.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"extract_nope.h"
+
+1438740912 c:\projects\archiver\extract_nope.h
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+
+1438742578 source:c:\projects\archiver\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	"compress.h"
+	"extract_huff.h"
+	"extract_nope.h"
+	"comp_nope.h"
+	"compress_lzw.h"
+	"extract_lzw.h"
+
+1438740912 source:c:\projects\archiver\priority_queue.c
+	<stdio.h>
+	<stdlib.h>
+	"priority_queue.h"
+
