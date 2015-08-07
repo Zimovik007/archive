@@ -8,16 +8,15 @@ typedef
 	struct huff_node_t
 	{
 		unsigned int frequency;
-		unsigned char c;
+		byte_t c;
 		struct huff_node_t *left, *right;
 	} huff_node_t;
 
 static void count_frequency(FILE *orig, filesize_t *frequency, filesize_t *orig_size)
 {
 	rewind(orig);
-	unsigned char c;
-	int i;
-	for(i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
+	byte_t c;
+	for(int i = 0; i < CHARS_NUM; i++) frequency[i] = 0;
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;
@@ -26,7 +25,7 @@ static void count_frequency(FILE *orig, filesize_t *frequency, filesize_t *orig_
 	}
 }
 
-static huff_node_t * create_huff_node(const unsigned char c, const unsigned int freq,
+static huff_node_t * create_huff_node(const byte_t c, const unsigned int freq,
 	huff_node_t *left, huff_node_t *right)
 {
 	huff_node_t *new_node = (huff_node_t*)malloc(sizeof(huff_node_t));
@@ -39,12 +38,11 @@ static huff_node_t * create_huff_node(const unsigned char c, const unsigned int 
 
 static huff_node_t * build_huff_tree(filesize_t *frequency)
 {
-	int i;
 	queue_t *queue = create_queue(sizeof(huff_node_t));
-	for(i = 0; i < CHARS_NUM; i++)
+	for(int i = 0; i < CHARS_NUM; i++)
 	{
 		if (frequency[i] > 0)
-			queue_insert(queue, frequency[i], create_huff_node((unsigned char)i, frequency[i], NULL, NULL));
+			queue_insert(queue, frequency[i], create_huff_node((byte_t)i, frequency[i], NULL, NULL));
 	}
 
 	huff_node_t *left = NULL, *right = NULL;
@@ -54,7 +52,7 @@ static huff_node_t * build_huff_tree(filesize_t *frequency)
 		right = (huff_node_t*)queue_pop(queue);
 		if (!right || !left) break;
 		queue_insert(queue, left->frequency + right->frequency,
-			create_huff_node((unsigned char)0, left->frequency + right->frequency, left, right));
+			create_huff_node((byte_t)0, left->frequency + right->frequency, left, right));
 	} while (left && right);
 
 	return left;
@@ -114,9 +112,7 @@ extern void generate_codes(cano_huff_t *codes)
 	{
 		if (codes[i - 1].length == 0) continue;
 		if (codes[i].length != codes[i - 1].length)
-		{
 			codes[i].code = (codes[i - 1].code + 1) << (codes[i].length - codes[i - 1].length);
-		}
 		else
 			codes[i].code = codes[i - 1].code + 1;
 	}
@@ -125,9 +121,8 @@ extern void generate_codes(cano_huff_t *codes)
 
 static void save_tree(FILE *archf, cano_huff_t *codes, filesize_t *archf_size)
 {
-	int i;
-	for(i = 0; i < CHARS_NUM; i++)
-		fprintf(archf, "%c", (unsigned char)codes[i].length);
+	for(int i = 0; i < CHARS_NUM; i++)
+		fprintf(archf, "%c", (byte_t)codes[i].length);
 	*archf_size += (filesize_t)CHARS_NUM;
 }
 
@@ -135,22 +130,23 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, filesize_t *arch
 {
 	rewind(orig);
 	save_tree(archf, codes, archf_size);
-	unsigned char c, prin_c = (unsigned char)0;
-	int i, k = 0, bit, j;
+	byte_t c, print_char = (byte_t)0;
+	int k = 0, bit;
 
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;
+		int j;
 		for(j = CHARS_NUM - 1; codes[j].c != c; j--);
-		for(i = codes[j].length - 1; i >= 0; i--)
+		for(int i = codes[j].length - 1; i >= 0; i--)
 		{
 			bit = codes[j].code & (1 << i);
 			bit = !(!bit);
-			prin_c = prin_c | (bit << k);
+			print_char = print_char | (bit << k);
 			if (++k == 8)
 			{
-				fprintf(archf, "%c", prin_c);
-				prin_c = (unsigned char)0;
+				fprintf(archf, "%c", print_char);
+				print_char = (byte_t)0;
 				k = 0;
 				++*archf_size;
 			}
@@ -158,7 +154,7 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, filesize_t *arch
 	}
 	if (k > 0)
 	{
-		fprintf(archf, "%c", prin_c);
+		fprintf(archf, "%c", print_char);
 		++*archf_size;
 	}
 }
