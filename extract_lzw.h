@@ -2,7 +2,8 @@
 #define EXTRACT_LZW_H
 
 #include <stdlib.h>
+#include "types.h"
 
-extern void extract_lzw(FILE *, FILE *, unsigned int);
+extern void extract_lzw(FILE *, FILE *, filesize_t);
 
 #endif

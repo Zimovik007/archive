@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "compress.h"
+#include "types.h"
 
 typedef
 	struct dictionary_t
@@ -16,20 +16,13 @@ typedef
 		int *word_len;
 	} dictionary_t;
 
-typedef
-	struct string_t
-	{
-		char chars[1000];
-		int length;
-	} string_t;
-
 extern string_t * create_str();
 
 extern dictionary_t * create_dict();
 
 extern void assign(string_t *, char);
 
-extern void compress_lzw(FILE *, FILE *, unsigned int *, unsigned int *);
+extern void compress_lzw(FILE *, FILE *, filesize_t *, filesize_t *);
 
 extern void add_to_dictionary(dictionary_t *, string_t *);
 

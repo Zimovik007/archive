@@ -2,17 +2,12 @@
 #define COMPRESS_H
 
 #include <stdlib.h>
-
-#define CHARS_NUM (256)
-#define ASCII_0 (48)
-
-typedef
-	unsigned long long filesize_t;
+#include "types.h"
 
 typedef
 	struct cano_huff_t
 	{
-		unsigned char c, length;
+		byte_t c, length;
 		unsigned long long code;
 	} cano_huff_t;
 

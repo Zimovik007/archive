@@ -63,6 +63,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="priority_queue.h" />
+		<Unit filename="types.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -22,15 +22,15 @@ static int take_code(FILE *archf)
 			k = 7;
 			if (i != 0)
 				if (fscanf(archf, "%c", &c) <= 0) return code;
-		}		
-	}	
+		}
+	}
 	return code;
 }
 
 static void assign_s(string_t *str, char *chars, int len)
 {
 	memcpy(str->chars, chars, len * sizeof(char));
-	str->length = len;	
+	str->length = len;
 }
 
 static string_t * concat_str(string_t *s1, string_t *s2)
@@ -40,10 +40,10 @@ static string_t * concat_str(string_t *s1, string_t *s2)
 	memcpy(new_str->chars + s1->length, s2->chars, s2->length * sizeof(char));
 	new_str->length = s1->length + s2->length;
 	//free(s1); free(s2);
-	return new_str;	
+	return new_str;
 }
 
-extern void extract_lzw(FILE *archf, FILE *orig, unsigned int orig_size)
+extern void extract_lzw(FILE *archf, FILE *orig, filesize_t orig_size)
 {
 	rewind(archf);
 	current_code_len = 8;
@@ -53,12 +53,12 @@ extern void extract_lzw(FILE *archf, FILE *orig, unsigned int orig_size)
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		assign(s1, (char)i);
-		add_to_dictionary(dict, s1);		
-	}	
-	
+		add_to_dictionary(dict, s1);
+	}
+
 	int t, code;
 	char c;
-	fscanf(archf, "%c", &c); 
+	fscanf(archf, "%c", &c);
 	assign(s1, c);
 	while (!feof(archf))
 	{
@@ -69,7 +69,7 @@ extern void extract_lzw(FILE *archf, FILE *orig, unsigned int orig_size)
 			assign_s(s2, dict->word[code], dict->word_len[code]);
 		}
 		s1 = concat_str(s1, s2);
-		printf("%s %d\n", s1->chars, s1->length);	
+		printf("%s %d\n", s1->chars, s1->length);
 		t = dict_str_id(dict, s1);
 		if (t == -1)
 		{
@@ -79,5 +79,5 @@ extern void extract_lzw(FILE *archf, FILE *orig, unsigned int orig_size)
 	}
 	//printf("%d\n", dict->size);
 	//for(i = 0; i < dict->size; i++)
-		//printf("%s %d\n", dict->word[i], dict->word_len[i]);	
+		//printf("%s %d\n", dict->word[i], dict->word_len[i]);
 }

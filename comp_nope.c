@@ -3,12 +3,12 @@
 #include <string.h>
 #include "comp_nope.h"
 
-extern FILE * compress_nope(FILE *orig, unsigned int *orig_size, unsigned int *archf_size)
+extern FILE * compress_nope(FILE *orig, filesize_t *orig_size, filesize_t *archf_size)
 {
 	FILE* archf = tmpfile();
 	rewind(orig);
 	*archf_size = *orig_size = 0;
-	char c;
+	byte_t c;
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;

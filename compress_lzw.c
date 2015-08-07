@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compress_lzw.h"
-	
-int current_code_len;	
+
+int current_code_len;
 
 extern dictionary_t * create_dict()
 {
@@ -13,20 +13,20 @@ extern dictionary_t * create_dict()
 	new_dict->code_len = NULL;
 	new_dict->word = NULL;
 	new_dict->word_len = NULL;
-	return new_dict;	
+	return new_dict;
 }
 
 extern string_t * create_str()
 {
 	string_t *new_str = (string_t*)malloc(sizeof(string_t));
 	new_str->length = 0;
-	return new_str;	
+	return new_str;
 }
 
 static void append(string_t *str, char c)
 {
 	int length = ++str->length;
-	str->chars[length - 1] = c;	
+	str->chars[length - 1] = c;
 }
 
 extern void assign(string_t *str, char c)
@@ -59,7 +59,7 @@ static int s_hash(string_t *str)
 {
 	int i, result = 0;
 	for(i = 0; i < str->length; i++)
-		result += power((int)str->chars[i], i + 1);	
+		result += power((int)str->chars[i], i + 1);
 	return result;
 }
 */
@@ -72,7 +72,7 @@ extern void add_to_dictionary(dictionary_t *dict, string_t *str)
 	dict->code_len = (int*)realloc(dict->code_len, size * sizeof(int));
 	dict->word = (char**)realloc(dict->word, size * sizeof(char*));
 	dict->word_len = (int*)realloc(dict->word_len, size * sizeof(int));
-	
+
 	dict->code[size - 1] = size - 1;
 	dict->code_len[size - 1] = current_code_len;
 	dict->word[size - 1] = (char*)malloc(str->length * sizeof(char));
@@ -93,7 +93,7 @@ extern int dict_str_id(dictionary_t *dict, string_t *str)
 	return -1;
 }
 
-extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsigned int *archf_size)
+extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesize_t *archf_size)
 {
 	current_code_len = 8;
 	dictionary_t *dict = create_dict();
@@ -102,11 +102,11 @@ extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsig
 	for(i = 0; i < CHARS_NUM; i++)
 	{
 		assign(str, (char)i);
-		add_to_dictionary(dict, str);		
-	}	
+		add_to_dictionary(dict, str);
+	}
 	int prev_id, t, k = 7, code, bit;
 	char c, prin_c = (char)0;
-	fscanf(orig, "%c", &c); 
+	fscanf(orig, "%c", &c);
 	for(i = 0; (char)i != c; prev_id = ++i);
 	rewind(orig);
 	str->length = 0;
@@ -122,14 +122,14 @@ extern void compress_lzw(FILE *orig, FILE *archf, unsigned int *orig_size, unsig
 			for(i = dict->code_len[prev_id] - 1; i >= 0; i--)
 			{
 				bit = !!(code & (1 << i));
-				prin_c = prin_c | (bit << k);						
+				prin_c = prin_c | (bit << k);
 				if (--k == -1)
 				{
 					fprintf(archf, "%c", prin_c);
 					prin_c = (char)0;
 					k = 7;
 					++*archf_size;
-				}								
+				}
 			}
 			assign(str, c);
 			for(i = 0; (char)i != c; prev_id = ++i);

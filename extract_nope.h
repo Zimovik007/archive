@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "types.h"
 
-extern FILE * extract_nope(FILE *, unsigned int);
+extern FILE * extract_nope(FILE *, filesize_t);
 
 #endif

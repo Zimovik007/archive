@@ -3,11 +3,11 @@
 #include <string.h>
 #include "extract_nope.h"
 
-extern FILE * extract_nope(FILE *archf, unsigned int orig_size)
+extern FILE * extract_nope(FILE *archf, filesize_t orig_size)
 {
 	FILE *orig = tmpfile();
-	unsigned int i;
-	char c;
+	filesize_t i;
+	byte_t c;
 	for(i = 0; i < orig_size; i++)
 	{
 		fscanf(archf, "%c", &c);

@@ -8,6 +8,7 @@
 #include "comp_nope.h"
 #include "compress_lzw.h"
 #include "extract_lzw.h"
+#include "types.h"
 
 #define COMPR (keys[(int)'c'])
 #define DEL_IN (keys[(int)'d'])
@@ -24,10 +25,10 @@
  * SOLID = solid
  * SH_TIME = show time
  */
-const int COMPRESS = 1, EXTRACT = 0;	
+const int COMPRESS = 1, EXTRACT = 0;
 int keys[CHARS_NUM];
 
- 
+
 struct tm * gettime()
 {
 	time_t t = time(NULL);
@@ -149,7 +150,7 @@ char ** add_to_list(char **files, char *filename, int *filescount)
 
 void read_block(char *buffer, FILE *stream)
 {
-	
+
 
 	return;
 }
@@ -163,7 +164,7 @@ void print_time(char *str_before, char *str_after)
 }
 
 void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id)
-{	
+{
 	const int BLOCK_LEN = 4096;
 	for(int i = 0; i < filescount; i++)
 	{
@@ -176,7 +177,7 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
 		void *buf = malloc(BLOCK_LEN);
 		rewind(filebuf);
-		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);		
+		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);
 		int left_to_write = compressed_size;
 		while (left_to_write > 0)
 		{
@@ -186,7 +187,7 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		}
 		fclose(orig);
 		if (!NO_INF) printf(" +\n");
-	}	
+	}
 }
 
 void compress(char **files, int *file_exists, int filescount)
@@ -214,8 +215,8 @@ void compress(char **files, int *file_exists, int filescount)
 		strftime(archname, 50, "arch_%Y-%m-%d_%X.upa", t);
 	}
 	else
-		archname = files[newfile_id];	
-	archf = fopen(archname, "wb");		
+		archname = files[newfile_id];
+	archf = fopen(archname, "wb");
 	print_bin_header(archf, exist_count, 0);
 	if (!SOLID)
 		compress_nosolid(archf, files, file_exists, filescount, newfile_id);
@@ -256,7 +257,7 @@ int main(int argc, char* argv[])
 		else
 			files = add_to_list(files, argv[i], &filescount);
 	}
-	
+
 	int *file_exists = malloc(filescount * sizeof(int));
 	for(int i = 0; i < filescount; i++)
 	{
@@ -264,7 +265,7 @@ int main(int argc, char* argv[])
 		file_exists[i] = !!file;
 		if (file) fclose(file);
 	}
-	
+
 	if (COMPR && !EXTR)
 		compress(files, file_exists, filescount);
 	else

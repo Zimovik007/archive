@@ -81,3 +81,94 @@
 	<stdlib.h>
 	"priority_queue.h"
 
+1438846039 source:c:\projects\archive\comp_nope.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"comp_nope.h"
+
+1438845932 c:\projects\archive\comp_nope.h
+	<stdio.h>
+	"types.h"
+
+1438845399 source:c:\projects\archive\compress.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"priority_queue.h"
+	"compress.h"
+
+1438845477 c:\projects\archive\priority_queue.h
+	<stdlib.h>
+	"types.h"
+
+1438845760 c:\projects\archive\compress.h
+	<stdlib.h>
+	"types.h"
+
+1438845812 source:c:\projects\archive\compress_lzw.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"compress_lzw.h"
+
+1438846859 c:\projects\archive\compress_lzw.h
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	"types.h"
+
+1438761029 source:c:\projects\archive\extract_huff.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"compress.h"
+	"extract_huff.h"
+
+1438845461 c:\projects\archive\extract_huff.h
+	<stdlib.h>
+	"types.h"
+
+1438846176 source:c:\projects\archive\extract_lzw.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"extract_lzw.h"
+	"compress_lzw.h"
+
+1438846003 c:\projects\archive\extract_lzw.h
+	<stdlib.h>
+	"types.h"
+
+1438845891 source:c:\projects\archive\extract_nope.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"extract_nope.h"
+
+1438845908 c:\projects\archive\extract_nope.h
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	"types.h"
+
+1438761029 source:c:\projects\archive\priority_queue.c
+	<stdio.h>
+	<stdlib.h>
+	"priority_queue.h"
+
+1438845702 c:\projects\archive\types.h
+
+1438845431 source:c:\projects\archive\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	"compress.h"
+	"extract_huff.h"
+	"extract_nope.h"
+	"comp_nope.h"
+	"compress_lzw.h"
+	"extract_lzw.h"
+	"types.h"
+
