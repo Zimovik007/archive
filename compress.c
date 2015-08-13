@@ -130,18 +130,20 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, filesize_t *arch
 {
 	rewind(orig);
 	save_tree(archf, codes, archf_size);
-	byte_t c, print_char = (byte_t)0;
-	int k = 0, bit;
+	byte_t print_char = 0;
+	int    k          = 0;
+	int    bit        = 0;
+	int    j;
+	byte_t c;
 
 	while (!feof(orig))
 	{
 		if (fscanf(orig, "%c", &c) <= 0) break;
-		int j;
 		for(j = CHARS_NUM - 1; codes[j].c != c; j--);
 		for(int i = codes[j].length - 1; i >= 0; i--)
 		{
 			bit = codes[j].code & (1 << i);
-			bit = !(!bit);
+			bit = !!bit;
 			print_char = print_char | (bit << k);
 			if (++k == 8)
 			{
@@ -163,24 +165,23 @@ extern FILE * compress_huffman(FILE *orig, filesize_t *orig_size, filesize_t *ar
 {
 	FILE* archf = tmpfile();
 	*archf_size = 0;
-	*orig_size = 0;
+	*orig_size  = 0;
 	filesize_t *frequency = (filesize_t*)calloc(CHARS_NUM, sizeof(filesize_t));
+
 	count_frequency(orig, frequency, orig_size);
-	int i;
-	huff_node_t *root = build_huff_tree(frequency);
+	huff_node_t *root  = build_huff_tree(frequency);
 	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 
-	for(i = 0; i < CHARS_NUM; i++)
+	for(int i = 0; i < CHARS_NUM; i++)
 	{
-		codes[i].c = (unsigned char)i;
+		codes[i].c = (byte_t)i;
 		codes[i].length = 0;
 		codes[i].code = 0;
 	}
 
 	count_lengths_codes(root, codes);
-	if (root)
-		if (!root->left && !root->right)
-			codes[(int)root->c].length = 1;
+	if (root && !root->left && !root->right)
+		codes[(int)root->c].length = 1;
 	generate_codes(codes);
 
 	codify(orig, codes, archf, archf_size);
