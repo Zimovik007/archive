@@ -43,41 +43,7 @@ static string_t * concat_str(string_t *s1, string_t *s2)
 	return new_str;
 }
 
-extern void extract_lzw(FILE *archf, FILE *orig, filesize_t orig_size)
+extern void extract_lzw(FILE *archf, filesize_t origsize, FILE *orig)
 {
-	rewind(archf);
-	current_code_len = 8;
-	dictionary_t *dict = create_dict();
-	string_t *s1 = create_str(), *s2 = create_str();
-	int i;
-	for(i = 0; i < CHARS_NUM; i++)
-	{
-		assign(s1, (char)i);
-		add_to_dictionary(dict, s1);
-	}
 
-	int t, code;
-	char c;
-	fscanf(archf, "%c", &c);
-	assign(s1, c);
-	while (!feof(archf))
-	{
-		//if (fscanf(archf, "%c", &c) <= 0) break;
-		code = take_code(archf);
-		if (code <= dict->size)
-		{
-			assign_s(s2, dict->word[code], dict->word_len[code]);
-		}
-		s1 = concat_str(s1, s2);
-		printf("%s %d\n", s1->chars, s1->length);
-		t = dict_str_id(dict, s1);
-		if (t == -1)
-		{
-			add_to_dictionary(dict, s1);
-			assign(s1, s1->chars[s1->length - 1]);
-		}
-	}
-	//printf("%d\n", dict->size);
-	//for(i = 0; i < dict->size; i++)
-		//printf("%s %d\n", dict->word[i], dict->word_len[i]);
 }

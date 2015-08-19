@@ -11,31 +11,19 @@
 #include "types.h"
 #include "binary_rw.h"
 
-#define COMPR     (keys[(int)'c'])
-#define DEL_INPUT (keys[(int)'d'])
-#define EXTR      (keys[(int)'e'])
-#define NO_INF    (keys[(int)'n'])
-#define SOLID     (keys[(int)'s'])
-#define SHOW_TIME (keys[(int)'t'])
+int     keys[CHARS_NUM];
+#define COMPR     (keys[(int)'c']) //compress
+#define DEL_INPUT (keys[(int)'d']) //delete input files
+#define EXTR      (keys[(int)'e']) //extract
+#define NO_INF    (keys[(int)'n']) //no information
+#define SOLID     (keys[(int)'s']) //archive is solid
+#define SHOW_TIME (keys[(int)'t']) //show time
 #define SAVE_SYMB ('=')
-/*
- * COMPR = compress
- * DEL_IN = delete input files
- * EXTR = extract
- * NO_INF = no information
- * SOLID = solid
- * SH_TIME = show time
- */
-#define COMPRESS_MODE (1)
-#define EXTRACT_MODE  (0)
-
-int keys[CHARS_NUM];
 
 struct tm * gettime()
 {
-	time_t     t    = time(NULL);
-	struct tm *ctme = localtime(&t);
-	return ctme;
+	time_t t = time(NULL);
+	return localtime(&t);
 }
 
 char ** add_to_list(char **files, char *filename, int *filescount)
@@ -73,7 +61,7 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
 		rewind(filebuf);
 
-		print_bin_fat_entry(archf, strlen(files[i]) + 1, files[i], orig_size, compressed_size, 0);
+		print_bin_fat_entry(archf, strlen(files[i]), files[i], orig_size, compressed_size, 0);
 		int left_to_write = compressed_size;
 		while (left_to_write > 0)
 		{
@@ -88,9 +76,9 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 
 void compress(char **files, int *file_exists, int filescount)
 {
-	FILE *archf = NULL;
-	char *archname;
-	int   exist_count =  0;
+	FILE *archf       = NULL;
+	char *archname    = NULL;
+	int   exist_count = 0;
 	int   newfile_id  = -1;
 
 	print_time("", " ");
@@ -130,12 +118,43 @@ void compress(char **files, int *file_exists, int filescount)
 	if (!NO_INF) printf(" compete -> %s\n", archname);
 }
 
-void extract(char **files, int *file_exists, int filescount)
+extract_method_t get_func(algorithm_t method)
 {
-	printf("extract\n");
+	if (method == HUFFMAN_ALG) return extract_huffman;
+	if (method == LZW_ALG) return extract_lzw;
+	if (method == NO_COMPRESS) return extract_nope;
+	return NULL;
 }
 
-int identify_action(char **files, int *file_exists, int filescount)
+void extract(char **files, int *file_exists, int filescount)
+{
+	for(int i = 0; i < filescount; i++)
+	{
+		FILE *file = fopen(files[i], "rb");
+		if (!file || !f_is_upa(file)) continue;
+		algorithm_t      method           = f_algo(file);
+		extract_method_t start_extracting = get_func(method);
+		if (!start_extracting)
+		{
+			fclose(file); continue;
+		}
+		int                is_solid         = f_is_solid(file);
+		unsigned short int f_in_arch_amt    = f_int_read(file, sizeof(unsigned short int));
+		for(int fcnt = 0; fcnt < f_in_arch_amt; fcnt++)
+		{
+			int   fn_len    = f_fname_len(file);
+			char *filename  = f_fname(file, fn_len);
+			int   packsize  = f_int_read(file, sizeof(filesize_t));
+			int   origsize  = f_int_read(file, sizeof(filesize_t));
+			FILE *orig_file = fopen(filename, "wb");
+			start_extracting(file, origsize, orig_file);
+			fclose(orig_file);
+		}
+		fclose(file);
+	}
+}
+
+arch_mode identify_action(char **files, int *file_exists, int filescount)
 {
 	for(int i = 0; i < filescount; i++)
 	{
@@ -179,10 +198,11 @@ int main(int argc, char* argv[])
 		extract(files, file_exists, filescount);
 	else
 	{
-		if (identify_action(files, file_exists, filescount) == COMPRESS_MODE)
-			compress(files, file_exists, filescount);
-		else
-			extract(files, file_exists, filescount);
+	if (identify_action(files, file_exists, filescount) == COMPRESS_MODE)
+		compress(files, file_exists, filescount);
+	else
+		extract(files, file_exists, filescount);
 	}
+
 	return 0;
 }

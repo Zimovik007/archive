@@ -3,15 +3,12 @@
 #include <string.h>
 #include "extract_nope.h"
 
-extern FILE * extract_nope(FILE *archf, filesize_t orig_size)
+extern void extract_nope(FILE *archf, filesize_t orig_size, FILE *orig)
 {
-	FILE *orig = tmpfile();
-	filesize_t i;
 	byte_t c;
-	for(i = 0; i < orig_size; i++)
+	for(filesize_t i = 0; i < orig_size; i++)
 	{
 		fscanf(archf, "%c", &c);
 		fprintf(orig, "%c", c);
 	}
-	return orig;
 }

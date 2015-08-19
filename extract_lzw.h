@@ -4,6 +4,6 @@
 #include <stdlib.h>
 #include "types.h"
 
-extern void extract_lzw(FILE *, FILE *, filesize_t);
+extern void extract_lzw(FILE *, filesize_t, FILE *);
 
 #endif

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "types.h"
 
 extern void print_bin_header(FILE *fout, int files_count, int is_solid);
@@ -20,5 +21,7 @@ extern char* f_fname(FILE *fin, int fname_len);
 extern filesize_t f_int_read(FILE *fin, int size);
 
 extern void f_read_attributes(FILE *fin);
+
+extern algorithm_t f_algo(FILE *fin);
 
 #endif

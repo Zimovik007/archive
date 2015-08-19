@@ -6,6 +6,6 @@
 #include <stdlib.h>
 #include "types.h"
 
-extern FILE * extract_nope(FILE *, filesize_t);
+extern void extract_nope(FILE *, filesize_t, FILE *);
 
 #endif
