@@ -161,9 +161,8 @@ static void codify(FILE *orig, cano_huff_t *codes, FILE *archf, filesize_t *arch
 	}
 }
 
-extern FILE * compress_huffman(FILE *orig, filesize_t *orig_size, filesize_t *archf_size)
+extern void compress_huffman(FILE *orig, FILE *archf, filesize_t *orig_size, filesize_t *archf_size)
 {
-	FILE* archf = tmpfile();
 	*archf_size = 0;
 	*orig_size  = 0;
 	filesize_t *frequency = (filesize_t*)calloc(CHARS_NUM, sizeof(filesize_t));
@@ -185,6 +184,4 @@ extern FILE * compress_huffman(FILE *orig, filesize_t *orig_size, filesize_t *ar
 	generate_codes(codes);
 
 	codify(orig, codes, archf, archf_size);
-
-	return archf;
 }

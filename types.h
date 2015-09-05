@@ -3,10 +3,13 @@
 
 #define CHARS_NUM (256)
 #define ASCII_0 (48)
+#define METHODS_NUM (4)
 
 typedef unsigned long long filesize_t;
 
 typedef void (*extract_method_t)(FILE *, filesize_t, FILE *);
+
+typedef void (*compress_method_t)(FILE *orig, FILE *archf, filesize_t *original_size, filesize_t *compressed_size);
 
 typedef unsigned char byte_t;
 

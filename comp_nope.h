@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "types.h"
 
-extern FILE * compress_nope(FILE *, filesize_t *, filesize_t *);
+extern void compress_nope(FILE *orig, FILE *archf, filesize_t *original_size, filesize_t *compressed_size);
 
 #endif

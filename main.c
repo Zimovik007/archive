@@ -20,6 +20,14 @@ int     keys[CHARS_NUM];
 #define SHOW_TIME (keys[(int)'t']) //show time
 #define SAVE_SYMB ('=')
 
+int     algs[METHODS_NUM + 1];
+#define AL_HUFF (algs[HUFFMAN_ALG])
+#define AL_LZW  (algs[LZW_ALG])
+#define AL_NOPE (algs[NO_COMPRESS])
+
+compress_method_t get_comp_func(algorithm_t method);
+extract_method_t  get_extr_func(algorithm_t method);
+
 struct tm * gettime()
 {
 	time_t t = time(NULL);
@@ -42,34 +50,38 @@ void print_time(char *str_before, char *str_after)
 	printf("%s%02d:%02d:%02d%s", str_before, t->tm_hour, t->tm_min, t->tm_sec, str_after);
 }
 
-void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id)
+compress_method_t get_comp_func(algorithm_t method)
 {
-	const int BLOCK_LEN = 4096;
+	if (method == HUFFMAN_ALG) return compress_huffman;
+	if (method == LZW_ALG)     return compress_lzw;
+	if (method == NO_COMPRESS) return compress_nope;
+	return NULL;
+}
 
+void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id, algorithm_t method)
+{
+	compress_method_t start_compressing = get_comp_func(method);
 	for(int i = 0; i < filescount; i++)
 	{
 		if (!file_exists[i] || i == newfile_id) continue;
 		FILE      *orig = fopen(files[i], "rb");
-		void      *buf  = malloc(BLOCK_LEN);
 		filesize_t orig_size;
 		filesize_t compressed_size;
 
 		print_time("", " ");
 		if (!NO_INF) printf("  %s", files[i]);
 		fflush(stdout);
+		filesize_t print_size_shift = print_bin_fat_entry(archf, strlen(files[i]), files[i], compressed_size, orig_size, 0);
 
-		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
-		rewind(filebuf);
+		start_compressing(orig, archf, &orig_size, &compressed_size);
 
-		print_bin_fat_entry(archf, strlen(files[i]), files[i], compressed_size, orig_size, 0);
-		int left_to_write = compressed_size;
-		while (left_to_write > 0)
-		{
-			fread (buf, 1, left_to_write >= BLOCK_LEN ? BLOCK_LEN : left_to_write, filebuf);
-			fwrite(buf, 1, left_to_write >= BLOCK_LEN ? BLOCK_LEN : left_to_write, archf);
-			left_to_write -= BLOCK_LEN;
-		}
+		fseek(archf, print_size_shift, SEEK_SET);
+		f_num_write(archf, compressed_size, sizeof(filesize_t));
+		f_num_write(archf, orig_size, sizeof(filesize_t));
+		fseek(archf, 0, SEEK_END);
+
 		fclose(orig);
+		if (DEL_INPUT) remove(files[i]);
 		if (!NO_INF) printf(" +\n");
 	}
 }
@@ -107,18 +119,23 @@ void compress(char **files, int *file_exists, int filescount)
 	else
 		archname = files[newfile_id];
 
+	algorithm_t i;
+	for(i = 0; i < METHODS_NUM + 1 && !algs[i]; i++);
+	algorithm_t method = i < METHODS_NUM ? i : HUFFMAN_ALG;
+
 	archf = fopen(archname, "wb");
-	print_bin_header(archf, exist_count, 0);
+	print_bin_header(archf, exist_count, 0, method);
 
 	if (!SOLID)
-		compress_nosolid(archf, files, file_exists, filescount, newfile_id);
+		compress_nosolid(archf, files, file_exists, filescount, newfile_id, method);
+
 	fclose(archf);
 	print_time("", " ");
 
-	if (!NO_INF) printf(" compete -> %s\n", archname);
+	if (!NO_INF) printf(" %s << complete\n", archname);
 }
 
-extract_method_t get_func(algorithm_t method)
+extract_method_t get_extr_func(algorithm_t method)
 {
 	if (method == HUFFMAN_ALG) return extract_huffman;
 	if (method == LZW_ALG)     return extract_lzw;
@@ -133,7 +150,7 @@ void extract(char **files, int *file_exists, int filescount)
 		FILE *file = fopen(files[i], "rb");
 		if (!file || !f_is_upa(file)) continue;
 		algorithm_t      method           = f_algo(file);
-		extract_method_t start_extracting = get_func(method);
+		extract_method_t start_extracting = get_extr_func(method);
 		if (!start_extracting)
 		{
 			fclose(file); continue;
@@ -149,9 +166,10 @@ void extract(char **files, int *file_exists, int filescount)
 			FILE *origfile = fopen(filename, "wb");
 			start_extracting(file, origsize, origfile);
 			fclose(origfile);
-			printf("%s -- %d\npack %d\norig %d\n", filename, fn_len, packsize, origsize);
+			//printf("%s -- %d\npack %d\norig %d\n", filename, fn_len, packsize, origsize);
 		}
 		fclose(file);
+		if (DEL_INPUT) remove(files[i]);
 	}
 }
 
@@ -179,7 +197,16 @@ int main(int argc, char* argv[])
 	for(int i = 1; i < argc; i++)
 	{
 		if (strlen(argv[i]) >= 2 && argv[i][0] == '-')
-			keys[(int)argv[i][1]] = 1;
+		{
+			char key = argv[i][1];
+			keys[(int)key] = 1;
+			if (key == 'a' && strlen(argv[i]) > 3 && argv[i][2] == '=')
+			{
+				if (strcmp(argv[i] + 3, "huff") == 0) algs[HUFFMAN_ALG] = 1;
+				if (strcmp(argv[i] + 3, "lzw")  == 0) algs[LZW_ALG]     = 1;
+				if (strcmp(argv[i] + 3, "nope") == 0) algs[NO_COMPRESS] = 1;
+			}
+		}
 		else
 			files = add_to_list(files, argv[i], &filescount);
 	}

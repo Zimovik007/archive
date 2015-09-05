@@ -1,12 +1,24 @@
 #include "binary_rw.h"
 
-const char * HUFF_DESCR = "HUFF";
-const char * LZW_DESCR  = "LZWA";
-const char * NOPE_DESCR = "NOPE";
+char * FORMAT_DESCR = "UPA";
 
-extern void print_bin_header(FILE *fout, int files_count, int is_solid)
+char * HUFF_DESCR = "HUFF";
+char * LZW_DESCR  = "LZWA";
+char * NOPE_DESCR = "NOPE";
+
+extern void print_bin_header(FILE *fout, int files_count, int is_solid, algorithm_t algo)
 {
-	fprintf(fout, "UPAHUFF%c", (char)is_solid);
+	fwrite(FORMAT_DESCR, sizeof(char), strlen(FORMAT_DESCR), fout);
+	char * algo_descr;
+	switch (algo)
+	{
+		case HUFFMAN_ALG: algo_descr = HUFF_DESCR; break;
+		case NO_COMPRESS: algo_descr = NOPE_DESCR; break;
+		case LZW_ALG: algo_descr = LZW_DESCR; break;
+		default: algo_descr = NULL;
+	}
+	fwrite(algo_descr, sizeof(char), strlen(algo_descr), fout);
+	fprintf(fout, "%c", (char)is_solid);
 	char bit;
 	unsigned short int f_count = (unsigned short int)files_count;
 	for(int i = 1; i >= 0; i--)
@@ -21,36 +33,33 @@ extern void print_bin_header(FILE *fout, int files_count, int is_solid)
 	}
 }
 
-extern void print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t packed_size, filesize_t orig_size, int is_solid)
+extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t packed_size, filesize_t orig_size, int is_solid)
 {
-	int i, j, bit;
 	--fname_len;
-	filesize_t p_size = packed_size;
-	filesize_t o_size = orig_size;
 	//print filename length
 	fprintf(fout, "%c", (unsigned char)fname_len);
 	//print filename
-	for(i = 0; i < fname_len + 1; i++)
+	for(int i = 0; i < fname_len + 1; i++)
 		fprintf(fout, "%c", fname[i]);
-	//print packed size
-	for(i = 7; i >= 0; i--){
+	filesize_t print_size_shift = ftell(fout);
+	f_num_write(fout, packed_size, sizeof(filesize_t));
+	f_num_write(fout, orig_size, sizeof(filesize_t));
+	fputs("\0\0", fout);
+	return print_size_shift;
+}
+
+extern void f_num_write(FILE *fout, filesize_t num, size_t size)
+{
+	int bit;
+	for(int i = size - 1; i >= 0; i--)
+	{
 		char c = 0;
-		for(j = 7; j >= 0 && !is_solid; j--){
-			bit = !!(p_size & (1 << (i*8 + j)));
+		for(int j = 7; j >= 0; j--){
+			bit = !!(num & (1 << (i*8 + j)));
 			c = c | (bit << j);
 		}
-		fprintf(fout, "%c", c);
+		fwrite(&c, 1, 1, fout);
 	}
-	//print orig_size
-	for(i = 7; i >= 0; i--){
-		char c = 0;
-		for(j = 7; j >= 0; j--){
-			bit = !!(o_size & (1 << (i*8 + j)));
-			c = c | (bit << j);
-		}
-		fprintf(fout, "%c", c);
-	}
-	fprintf(fout, "\0\0");
 }
 
 extern algorithm_t f_algo(FILE *fin)

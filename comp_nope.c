@@ -3,9 +3,8 @@
 #include <string.h>
 #include "comp_nope.h"
 
-extern FILE * compress_nope(FILE *orig, filesize_t *orig_size, filesize_t *archf_size)
+extern void compress_nope(FILE *orig, FILE *archf, filesize_t *orig_size, filesize_t *archf_size)
 {
-	FILE* archf = tmpfile();
 	rewind(orig);
 	*archf_size = *orig_size = 0;
 	byte_t c;
@@ -16,5 +15,4 @@ extern FILE * compress_nope(FILE *orig, filesize_t *orig_size, filesize_t *archf
 		++*orig_size;
 	}
 	*archf_size = *orig_size;
-	return archf;
 }

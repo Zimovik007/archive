@@ -11,7 +11,7 @@ typedef
 		unsigned long long code;
 	} cano_huff_t;
 
-extern FILE * compress_huffman(FILE *, filesize_t *original_size, filesize_t *compressed_size);
+extern void compress_huffman(FILE *orig, FILE *archf, filesize_t *original_size, filesize_t *compressed_size);
 
 extern void generate_codes(cano_huff_t *);
 
