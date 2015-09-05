@@ -7,13 +7,12 @@ const char * NOPE_DESCR = "NOPE";
 extern void print_bin_header(FILE *fout, int files_count, int is_solid)
 {
 	fprintf(fout, "UPAHUFF%c", (char)is_solid);
-	int i, j;
 	char bit;
 	unsigned short int f_count = (unsigned short int)files_count;
-	for(i = 1; i >= 0; i--)
+	for(int i = 1; i >= 0; i--)
 	{
 		char c = 0;
-		for(j = 7; j >= 0; j--)
+		for(int j = 7; j >= 0; j--)
 		{
 			bit = !!(f_count & (1 << (i*8 + j)));
 			c = c | (bit << j);
@@ -103,12 +102,11 @@ extern char* f_fname(FILE *fin, int fname_len)
 extern filesize_t f_int_read(FILE *fin, int size)
 {
 	filesize_t res = 0, bit;
-	int i, j;
 	char c;
-	for(i = size - 1; i >= 0; i--)
+	for(int i = size - 1; i >= 0; i--)
 	{
 		fscanf(fin, "%c", &c);
-		for(j = 7; j >= 0; j--)
+		for(int j = 7; j >= 0; j--)
 		{
 			bit = !!(c & (1 << j));
 			res = res | (bit << (i*8 + j));

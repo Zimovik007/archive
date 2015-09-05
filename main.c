@@ -61,7 +61,7 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		FILE *filebuf = compress_huffman(orig, &orig_size, &compressed_size);
 		rewind(filebuf);
 
-		print_bin_fat_entry(archf, strlen(files[i]), files[i], orig_size, compressed_size, 0);
+		print_bin_fat_entry(archf, strlen(files[i]), files[i], compressed_size, orig_size, 0);
 		int left_to_write = compressed_size;
 		while (left_to_write > 0)
 		{
@@ -121,7 +121,7 @@ void compress(char **files, int *file_exists, int filescount)
 extract_method_t get_func(algorithm_t method)
 {
 	if (method == HUFFMAN_ALG) return extract_huffman;
-	if (method == LZW_ALG) return extract_lzw;
+	if (method == LZW_ALG)     return extract_lzw;
 	if (method == NO_COMPRESS) return extract_nope;
 	return NULL;
 }
@@ -146,9 +146,10 @@ void extract(char **files, int *file_exists, int filescount)
 			char *filename  = f_fname(file, fn_len);
 			int   packsize  = f_int_read(file, sizeof(filesize_t));
 			int   origsize  = f_int_read(file, sizeof(filesize_t));
-			FILE *orig_file = fopen(filename, "wb");
-			start_extracting(file, origsize, orig_file);
-			fclose(orig_file);
+			FILE *origfile = fopen(filename, "wb");
+			start_extracting(file, origsize, origfile);
+			fclose(origfile);
+			printf("%s -- %d\npack %d\norig %d\n", filename, fn_len, packsize, origsize);
 		}
 		fclose(file);
 	}

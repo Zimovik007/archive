@@ -11,7 +11,7 @@ typedef
 		struct ext_huff_node_t *left, *right;
 	} ext_huff_node_t;
 	
-static ext_huff_node_t * ext_tree_step(ext_huff_node_t *parent, int bit)
+inline static ext_huff_node_t * ext_tree_step(ext_huff_node_t *parent, int bit)
 {
 	return bit ? parent->right : parent->left;
 }
@@ -61,8 +61,9 @@ static void ext_build_huff_tree(cano_huff_t *codes, ext_huff_node_t *root)
 
 extern void extract_huffman(FILE *archf, filesize_t orig_size, FILE *orig)
 {
-	ext_huff_node_t *root = ext_create_huff_node((unsigned char)0), *cur_node;
-	cano_huff_t *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
+	ext_huff_node_t *cur_node;
+	ext_huff_node_t *root  = ext_create_huff_node((unsigned char)0);
+	cano_huff_t     *codes = (cano_huff_t*)malloc(CHARS_NUM * sizeof(cano_huff_t));
 	int i;	
 	for(i = 0; i < CHARS_NUM; i++)
 	{
