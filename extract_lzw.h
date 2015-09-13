@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include "types.h"
+#include "mystring.h"
+#include "dict.h"
 
 extern void extract_lzw(FILE *, filesize_t, FILE *);
 

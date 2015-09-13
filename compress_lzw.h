@@ -5,26 +5,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include "types.h"
-
-typedef
-	struct dictionary_t
-	{
-		int size;
-		long long *code;
-		char **word;
-		int *word_len;
-	} dictionary_t;
-
-extern string_t * create_str();
-
-extern dictionary_t * create_dict();
-
-extern void assign(string_t *, char);
+#include "dict.h"
+#include "mystring.h"
 
 extern void compress_lzw(FILE *, FILE *, filesize_t *, filesize_t *);
-
-extern int  add_to_dictionary(dictionary_t *, string_t *);
-
-extern int  dict_str_id(dictionary_t *, string_t *);
 
 #endif

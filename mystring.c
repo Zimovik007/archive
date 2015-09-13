@@ -8,14 +8,23 @@ extern string_t * create_str()
 	return new_str;
 }
 
-inline extern void append(string_t *str, char c)
+inline extern string_t * append(string_t *str, byte_t c)
 {
-	int length = ++str->length;
+	int length = setlength(str, str->length + 1);
 	str->chars[length - 1] = c;
+	return str;
 }
 
-inline extern void assign(string_t *str, char c)
+inline extern string_t * assign(string_t *str, byte_t c)
 {
-	str->length = 1;
+	setlength(str, 1);
 	str->chars[0] = c;
+	return str;
+}
+
+inline extern int setlength(string_t *str, const int length)
+{
+	str->length = length;
+	str->chars  = (byte_t*)realloc(str->chars, length);
+	return length;
 }

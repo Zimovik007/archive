@@ -44,7 +44,7 @@ static string_t * concat_str(string_t *s1, string_t *s2)
 
 static void print_word(FILE *orig, dictionary_t *dict, long long code)
 {
-	fwrite(dict->word[code], sizeof(char), dict->word_len[code], orig);
+
 }
 
 extern void extract_lzw(FILE *archf, filesize_t origsize, FILE *orig)
@@ -55,19 +55,11 @@ extern void extract_lzw(FILE *archf, filesize_t origsize, FILE *orig)
 	for(int i = 0; i < CHARS_NUM; i++)
 	{
 		assign(str, (char)i);
-		add_to_dictionary(dict, str);
 	}
 	++current_code_len;
 	string_t *str1 = create_str(), *str2 = create_str();
 	while(!feof(archf))
 	{
-		long long code = take_code(archf);
-		print_word(orig, dict, code);
-		assign_s(str1, dict->word[code], dict->word_len[code]);
-		str1 = concat_str(str2, str1);
-		if (dict_str_id(dict, str1) == -1)
-			add_to_dictionary(dict, str1);
-		assign_s(str2, dict->word[code][dict->word_len[code] - 1], 1);
-	}
 
+	}
 }

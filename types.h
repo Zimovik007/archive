@@ -9,6 +9,8 @@
 
 typedef unsigned long long filesize_t;
 
+typedef int code_t;
+
 typedef void (*extract_method_t)(FILE *, filesize_t, FILE *);
 
 typedef void (*compress_method_t)(FILE *orig, FILE *archf, filesize_t *original_size, filesize_t *compressed_size);
