@@ -11,7 +11,6 @@ typedef
 	{
 		int size;
 		long long *code;
-		int *code_len;
 		char **word;
 		int *word_len;
 	} dictionary_t;
@@ -24,8 +23,8 @@ extern void assign(string_t *, char);
 
 extern void compress_lzw(FILE *, FILE *, filesize_t *, filesize_t *);
 
-extern void add_to_dictionary(dictionary_t *, string_t *);
+extern int  add_to_dictionary(dictionary_t *, string_t *);
 
-extern int dict_str_id(dictionary_t *, string_t *);
+extern int  dict_str_id(dictionary_t *, string_t *);
 
 #endif

@@ -166,7 +166,6 @@ void extract(char **files, int *file_exists, int filescount)
 			FILE *origfile = fopen(filename, "wb");
 			start_extracting(file, origsize, origfile);
 			fclose(origfile);
-			//printf("%s -- %d\npack %d\norig %d\n", filename, fn_len, packsize, origsize);
 		}
 		fclose(file);
 		if (DEL_INPUT) remove(files[i]);
