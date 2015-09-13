@@ -6,11 +6,16 @@
 
 int current_code_len;
 
-static long long take_code(FILE *archf)
+inline static int is_two_degree(int a)
+{
+	return !(a&(a-1));
+}
+
+static code_t read_code(FILE *archf)
 {
 	static int  k = 7;
 	static char c;
-	long long code = 0;
+	code_t code = 0;
 	if (k == 7)
 		if (fscanf(archf, "%c", &c) <= 0) return code;
 	for(int i = current_code_len - 1; i >= 0; i--)
@@ -27,39 +32,30 @@ static long long take_code(FILE *archf)
 	return code;
 }
 
-static void assign_s(string_t *str, char *chars, int len)
+static string_t * print_word(FILE *orig, dictionary_t *dict, code_t code)
 {
-	memcpy(str->chars, chars, len * sizeof(char));
-	str->length = len;
-}
-
-static string_t * concat_str(string_t *s1, string_t *s2)
-{
-	string_t *new_str = create_str();
-	memcpy(new_str->chars,              s1->chars, s1->length * sizeof(char));
-	memcpy(new_str->chars + s1->length, s2->chars, s2->length * sizeof(char));
-	new_str->length = s1->length + s2->length;
-	return new_str;
-}
-
-static void print_word(FILE *orig, dictionary_t *dict, long long code)
-{
-
+	string_t *str = get_word(dict, code);
+	fwrite(str->chars, str->length, sizeof(byte_t), orig);
+	return str;
 }
 
 extern void extract_lzw(FILE *archf, filesize_t origsize, FILE *orig)
 {
 	current_code_len = 8;
-	dictionary_t *dict = create_dict();
+	dictionary_t *dict = create_dict(EXTRACT_MODE);
 	string_t     *str  = create_str();
-	for(int i = 0; i < CHARS_NUM; i++)
-	{
-		assign(str, (char)i);
-	}
-	++current_code_len;
-	string_t *str1 = create_str(), *str2 = create_str();
+	string_t     *read_word = NULL;
+	code_t code = 0;
+	for(int i = 0; i < CHARS_NUM; add_word(dict, c_assign(str, i++)));
 	while(!feof(archf))
 	{
-
+		code = read_code(archf);
+		printf("<<%d>>", code);
+		read_word = print_word(orig, dict, code);
+		str = s_append(str, read_word->chars[0]);
+		add_word(dict, str);
+		str = s_assign(str, read_word->chars, read_word->length);
+		if (is_two_degree(dict->cardinality - 1)) ++current_code_len;
+		free(read_word);
 	}
 }

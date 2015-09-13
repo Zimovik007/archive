@@ -24,16 +24,26 @@ typedef struct trie_node_t
 	struct trie_node_child_t *childs;
 } trie_node_t;
 
-typedef struct dictionary_t
+typedef struct row_t
+{
+	code_t code;
+	string_t *word;
+} row_t;
+
+typedef struct trie_dictionary_t
 {
 	int cardinality;
 	trie_node_t *root;
+	row_t *words;
+	arch_mode mode;
 } dictionary_t;
 
-extern dictionary_t * create_dict();
+extern dictionary_t * create_dict(arch_mode);
 
 extern code_t get_code(dictionary_t *, string_t *);
 
-extern void   add_word(dictionary_t *, string_t *);
+extern string_t * get_word(dictionary_t *, code_t);
+
+extern void add_word(dictionary_t *, string_t *);
 
 #endif /* DICT_H_ */

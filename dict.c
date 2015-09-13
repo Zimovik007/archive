@@ -9,11 +9,13 @@ static trie_node_t * create_node(nodetype_t nodetp)
 	return new_node;
 }
 
-extern dictionary_t * create_dict()
+extern dictionary_t * create_dict(arch_mode mode)
 {
 	dictionary_t *new_dict = (dictionary_t*)malloc(sizeof(dictionary_t));
 	new_dict->cardinality = 0;
-	new_dict->root = create_node(NT_ROOT);
+	new_dict->root  = create_node(NT_ROOT);
+	new_dict->words = NULL;
+	new_dict->mode  = mode;
 	return new_dict;
 }
 
@@ -53,12 +55,35 @@ extern code_t get_code(dictionary_t *dict, string_t *str)
 	return cur_node && cur_node->nodetype == NT_WORDEND ? cur_node->code : -1;
 }
 
+extern string_t * get_word(dictionary_t *dict, code_t code)
+{
+	return dict->words[code].word;
+}
+
+static void add_to_list(dictionary_t *dict, string_t *str, code_t code)
+{
+	dict->words = (row_t*)realloc(dict->words, dict->cardinality * sizeof(row_t));
+	dict->words[code].code = code;
+	dict->words[code].word = create_str();
+	dict->words[code].word = s_assign(dict->words[code].word, str->chars, str->length);
+}
+
 extern void add_word(dictionary_t *dict, string_t *str)
 {
-	printf("%s\n", str->chars);
 	trie_node_t *cur_node = dict->root;
 	for(int i = 0; i < str->length; i++)
 		cur_node = break_trought(cur_node, str->chars[i], i == str->length - 1 ? NT_WORDEND : NT_NONE);
-	cur_node->code = cur_node->nodetype == NT_WORDEND ? dict->cardinality++ : -1;
+	if (cur_node->nodetype == NT_WORDEND)
+	{
+		cur_node->code = dict->cardinality++;
+		if (dict->mode == EXTRACT_MODE) add_to_list(dict, str, cur_node->code);
+	}
 }
+
+
+
+
+
+
+
 

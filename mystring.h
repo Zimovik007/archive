@@ -2,6 +2,7 @@
 #define MYSTRING_H_
 
 #include <stdlib.h>
+#include <string.h>
 #include "types.h"
 
 typedef struct string_t
@@ -12,10 +13,14 @@ typedef struct string_t
 
 extern string_t * create_str();
 
-inline extern string_t * append(string_t *str, byte_t c);
+extern inline string_t * s_append(string_t *, byte_t);
 
-inline extern string_t * assign(string_t *str, byte_t c);
+extern inline string_t * c_assign(string_t *, byte_t);
 
-inline extern int setlength(string_t *str, int length);
+extern inline int s_setlength(string_t *, const int);
+
+extern string_t * s_concat(string_t *, string_t *);
+
+extern string_t * s_assign(string_t *, byte_t *, int);
 
 #endif /* MYSTRING_H_ */
