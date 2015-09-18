@@ -45,6 +45,12 @@ extern string_t * s_assign(string_t *str, byte_t *chars, int length)
 	return str;
 }
 
+extern void s_print(string_t *str)
+{
+	for(int i = 0; i < str->length; i++)
+		printf("%c", str->chars[i]);
+}
+
 
 
 

@@ -23,4 +23,6 @@ extern string_t * s_concat(string_t *, string_t *);
 
 extern string_t * s_assign(string_t *, byte_t *, int);
 
+extern void s_print(string_t *);
+
 #endif /* MYSTRING_H_ */
