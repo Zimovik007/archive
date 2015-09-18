@@ -5,6 +5,8 @@
 #include "types.h"
 #include "mystring.h"
 
+#define NO_WORD (NULL)
+
 typedef enum
 {
 	NT_NONE, NT_ROOT, NT_WORDEND

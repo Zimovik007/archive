@@ -57,6 +57,7 @@ extern code_t get_code(dictionary_t *dict, string_t *str)
 
 extern string_t * get_word(dictionary_t *dict, code_t code)
 {
+	if (code >= dict->cardinality) return NO_WORD;
 	return dict->words[code].word;
 }
 
@@ -75,6 +76,7 @@ extern void add_word(dictionary_t *dict, string_t *str)
 		cur_node = break_trought(cur_node, str->chars[i], i == str->length - 1 ? NT_WORDEND : NT_NONE);
 	if (cur_node->nodetype == NT_WORDEND)
 	{
+//		printf("%d \"%s\"\n", dict->cardinality, str->chars);
 		cur_node->code = dict->cardinality++;
 		if (dict->mode == EXTRACT_MODE) add_to_list(dict, str, cur_node->code);
 	}

@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#define check(x) ({printf("check_%d\n", x); fflush(stdout);})
+
 #define CHARS_NUM (256)
 #define ASCII_0 (48)
 #define METHODS_NUM (4)

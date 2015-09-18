@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "compress_lzw.h"
 
 int current_code_len;
@@ -23,13 +20,14 @@ extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesiz
 	byte_t c, prin_c = 0;
 	free(str);
 	str = create_str();
-	while (1)
+	int should_continue = 1;
+	while (should_continue)
 	{
-		if (fread(&c, sizeof(byte_t), 1, orig) == 0) break;
-		++*orig_size;
+		should_continue = fread(&c, sizeof(byte_t), 1, orig);
+		*orig_size += should_continue;
 		str = s_append(str, c);
 		does_word_exist = get_code(dict, str);
-		if (does_word_exist == -1)
+		if (does_word_exist == -1 || !should_continue)
 		{
 			code = last_existing_code;
 			for(int i = current_code_len - 1; i >= 0; i--)
@@ -44,6 +42,7 @@ extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesiz
 					++*archf_size;
 				}
 			}
+			if (!should_continue) break;
 			add_word(dict, str);
 			c_assign(str, c);
 			for(byte_t i = 0; i != c; last_existing_code = ++i);
@@ -51,6 +50,7 @@ extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesiz
 		}
 		else
 			last_existing_code = does_word_exist;
+		should_continue = !feof(orig);
 	}
 	if (k < 7)
 	{
