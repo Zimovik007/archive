@@ -45,12 +45,14 @@ extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesiz
 			if (!should_continue) break;
 			add_word(dict, str);
 			c_assign(str, c);
-			for(byte_t i = 0; i != c; last_existing_code = ++i);
+			byte_t i;
+			for(i = 0; i != c; i++);
+			last_existing_code = i;
 			if (is_two_degree(dict->cardinality - 1)) ++current_code_len;
 		}
 		else
 			last_existing_code = does_word_exist;
-		should_continue = !feof(orig);
+		should_continue = should_continue && !feof(orig);
 	}
 	if (k < 7)
 	{

@@ -33,15 +33,15 @@ extern string_t * s_concat(string_t *s1, string_t *s2)
 {
 	string_t *new_str = create_str();
 	s_setlength(new_str, s1->length + s2->length);
-	memcpy(new_str->chars,              s1->chars, s1->length * sizeof(byte_t));
-	memcpy(new_str->chars + s1->length, s2->chars, s2->length * sizeof(byte_t));
+	new_str->chars = (byte_t*)memcpy(new_str->chars,              s1->chars, s1->length * sizeof(byte_t));
+	new_str->chars = (byte_t*)memcpy(new_str->chars + s1->length, s2->chars, s2->length * sizeof(byte_t));
 	return new_str;
 }
 
 extern string_t * s_assign(string_t *str, byte_t *chars, int length)
 {
 	s_setlength(str, length);
-	memcpy(str->chars, chars, length * sizeof(byte_t));
+	str->chars = (byte_t*)memcpy(str->chars, chars, length * sizeof(byte_t));
 	return str;
 }
 

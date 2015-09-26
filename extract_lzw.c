@@ -59,7 +59,7 @@ extern void extract_lzw(FILE *archf, filesize_t origsize, FILE *orig)
 	while(!feof(archf))
 	{
 		code = read_code(archf);
-		if (code == -1 || printed_cnt == origsize) break;
+		if (code == -1 || printed_cnt >= origsize) break;
 		read_word = print_word(orig, dict, code, prev_code);
 		printed_cnt += read_word->length;
 		str = s_append(str, read_word->chars[0]);
