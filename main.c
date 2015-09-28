@@ -10,6 +10,7 @@
 #include "extract_lzw.h"
 #include "types.h"
 #include "binary_rw.h"
+#include "command_line_args.h"
 
 int     keys[CHARS_NUM];
 #define COMPR     (keys[(int)'c']) //compress
@@ -24,6 +25,8 @@ int     algs[METHODS_NUM + 1];
 #define AL_HUFF (algs[HUFFMAN_ALG])
 #define AL_LZW  (algs[LZW_ALG])
 #define AL_NOPE (algs[NO_COMPRESS])
+
+cl_check_t *checkres;
 
 compress_method_t get_comp_func(algorithm_t method);
 extract_method_t  get_extr_func(algorithm_t method);
@@ -190,9 +193,16 @@ arch_mode identify_action(char **files, int *file_exists, int filescount)
 
 int main(int argc, char* argv[])
 {
+	{
+		cl_init();
+		for(int i = 1; i < argc; cl_add_arg(argv[i++]));
+		cl_check_t *check = cl_get_arg_res(AT_COMPRESSFILE);
+		for(int i = 0; i < check->valcnt; i++)
+			printf("%s\n", check->values[i]);
+		return 0;
+	}
 	int    filescount = 0;
 	char **files      = NULL;
-
 	for(int i = 1; i < argc; i++)
 	{
 		if (strlen(argv[i]) >= 2 && argv[i][0] == '-')
