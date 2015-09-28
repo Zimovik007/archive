@@ -10,7 +10,6 @@ inline static int is_two_degree(int a)
 extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesize_t *archf_size)
 {
 	rewind(orig);
-	*orig_size = *archf_size = 0;
 	current_code_len = 8;
 	dictionary_t *dict = create_dict(COMPRESS_MODE);
 	string_t     *str  = create_str();
@@ -45,9 +44,7 @@ extern void compress_lzw(FILE *orig, FILE *archf, filesize_t *orig_size, filesiz
 			if (!should_continue) break;
 			add_word(dict, str);
 			c_assign(str, c);
-			byte_t i;
-			for(i = 0; i != c; i++);
-			last_existing_code = i;
+			last_existing_code = c;
 			if (is_two_degree(dict->cardinality - 1)) ++current_code_len;
 		}
 		else

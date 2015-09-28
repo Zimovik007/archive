@@ -17,6 +17,7 @@ extern inline string_t * s_append(string_t *str, byte_t c)
 
 extern inline string_t * c_assign(string_t *str, byte_t c)
 {
+	if (!str) str = create_str();
 	s_setlength(str, 1);
 	str->chars[0] = c;
 	return str;
@@ -40,6 +41,7 @@ extern string_t * s_concat(string_t *s1, string_t *s2)
 
 extern string_t * s_assign(string_t *str, byte_t *chars, int length)
 {
+	if (!str) str = create_str();
 	s_setlength(str, length);
 	str->chars = (byte_t*)memcpy(str->chars, chars, length * sizeof(byte_t));
 	return str;
