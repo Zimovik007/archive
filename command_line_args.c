@@ -88,28 +88,22 @@ static cl_node_t * cl_get_word_node(cl_node_t *parent, char *argv)
 	return cur_node;
 }
 
-int get_childs_str_iter;
-static void cl_recursive_get_childs(cl_node_t *parent, cl_check_t *check)
+static void cl_recursive_get_childs(cl_node_t *parent, cl_check_t *check, int strindex)
 {
+#define cvals (check->values)
+#define ccnt  (check->valcnt)
 	if (!parent) return;
-	check->values[check->valcnt - 1] = (char*)realloc(check->values[check->valcnt - 1], (get_childs_str_iter + 1) * sizeof(char));
-	check->values[check->valcnt - 1][get_childs_str_iter - 1] = parent->symb;
-	check->values[check->valcnt - 1][get_childs_str_iter] = '\0';
+	cvals[ccnt - 1] = (char*)realloc(cvals[ccnt - 1], (strindex + 1) * sizeof(char));
+	cvals[ccnt - 1][strindex - 1] = parent->symb;
+	cvals[ccnt - 1][strindex] = '\0';
 	if (parent->nodetype == CLN_WORDEND)
 	{
-		++check->valcnt;
-		check->values = (char**)realloc(check->values, check->valcnt * sizeof(char*));
-		check->values[check->valcnt - 1] =
-			memcpy(check->values[check->valcnt - 2],
-			       check->values[check->valcnt - 1],
-			       strlen(check->values[check->valcnt - 2]) + 1);
+		cvals = (char**)realloc(cvals, ++ccnt * sizeof(char*));
+		cvals[ccnt - 1] = (char*)malloc(strlen(cvals[ccnt - 2]) + 1);
+		cvals[ccnt - 1] = memcpy(cvals[ccnt - 1], cvals[ccnt - 2], strlen(cvals[ccnt - 2]) + 1);
 	}
 	for(int i = 0; i < parent->childsamt; i++)
-	{
-		++get_childs_str_iter;
-		cl_recursive_get_childs(parent->childs[i], check);
-		--get_childs_str_iter;
-	}
+		cl_recursive_get_childs(parent->childs[i], check, strindex + 1);
 }
 
 static cl_check_t * cl_get_child_words(cl_node_t *parent)
@@ -119,12 +113,11 @@ static cl_check_t * cl_get_child_words(cl_node_t *parent)
 	result->valcnt = 0;
 	result->values = NULL;
 	if (!parent) return result;
-//	somewhere here lies an error
-	get_childs_str_iter = 0;
 	result->valcnt = 1;
 	result->values = (char**)malloc(sizeof(char*));
 	result->values[0] = (char*)malloc(sizeof(char));
-	cl_recursive_get_childs(parent, result);
+	for(int i = 0; i < parent->childsamt; i++)
+		cl_recursive_get_childs(parent->childs[i], result, 1);
 	--result->valcnt;
 	return result;
 }

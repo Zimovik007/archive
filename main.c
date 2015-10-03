@@ -193,14 +193,6 @@ arch_mode identify_action(char **files, int *file_exists, int filescount)
 
 int main(int argc, char* argv[])
 {
-	{
-		cl_init();
-		for(int i = 1; i < argc; cl_add_arg(argv[i++]));
-		cl_check_t *check = cl_get_arg_res(AT_COMPRESSFILE);
-		for(int i = 0; i < check->valcnt; i++)
-			printf("%s\n", check->values[i]);
-		return 0;
-	}
 	int    filescount = 0;
 	char **files      = NULL;
 	for(int i = 1; i < argc; i++)
