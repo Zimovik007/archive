@@ -44,4 +44,6 @@ extern cl_check_t * cl_get_arg_res(cl_argument_t arg);
 
 extern int cl_is_true(cl_argument_t arg);
 
+extern void cl_split_nums(cl_check_t *check);
+
 #endif /* COMMAND_LINE_ARGS_H_ */

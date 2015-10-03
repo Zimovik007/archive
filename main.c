@@ -146,11 +146,11 @@ extract_method_t get_extr_func(algorithm_t method)
 	return NULL;
 }
 
-void extract(char **files, int *file_exists, int filescount)
+void process_archfile(char **files, int *file_exists, int filescount)
 {
-	for(int i = 0; i < filescount; i++)
+	for(int archfcnt = 0; archfcnt < filescount; archfcnt++)
 	{
-		FILE *file = fopen(files[i], "rb");
+		FILE *file = fopen(files[archfcnt], "rb");
 		if (!file || !f_is_upa(file)) continue;
 		algorithm_t      method           = f_algo(file);
 		extract_method_t start_extracting = get_extr_func(method);
@@ -158,20 +158,43 @@ void extract(char **files, int *file_exists, int filescount)
 		{
 			fclose(file); continue;
 		}
-		int                is_solid         = f_is_solid(file);
-		unsigned short int f_in_arch_amt    = f_int_read(file, sizeof(unsigned short int));
+		int is_solid = f_is_solid(file);
+		if (is_solid)
+			continue;
+		unsigned short int f_in_arch_amt = f_int_read(file, sizeof(unsigned short int));
 		for(int fcnt = 0; fcnt < f_in_arch_amt; fcnt++)
 		{
 			int   fn_len    = f_fname_len(file);
 			char *filename  = f_fname(file, fn_len);
 			int   packsize  = f_int_read(file, sizeof(filesize_t));
 			int   origsize  = f_int_read(file, sizeof(filesize_t));
+			if (cl_is_true(AT_FILELIST))
+			{
+				char measure = origsize < 1024 ? 'B' : (origsize < 1024*1024 ? 'K' : 'M');
+				double printsize = origsize < 1024 ? origsize : (origsize < 1024*1024 ? origsize/1024.0 : origsize/1024.0/1024.0);
+				printf("  %d. %s (%.1f %c)\n", fcnt + 1, filename, printsize, measure);
+				fseek(file, packsize, SEEK_CUR);
+				continue;
+			}
+			if (cl_is_true(AT_GETFILE))
+			{
+				int get_it = 0;
+				cl_check_t *check = cl_get_arg_res(AT_GETFILE);
+				cl_split_nums(check);
+				for(int i = 0; i < check->valcnt; i++)
+					get_it = get_it || (strtol(check->values[i], (char**)NULL, 10) == fcnt + 1);
+				if (!get_it)
+				{
+					fseek(file, packsize, SEEK_CUR);
+					continue;
+				}
+			}
 			FILE *origfile = fopen(filename, "wb");
 			start_extracting(file, origsize, origfile);
 			fclose(origfile);
 		}
 		fclose(file);
-		if (DEL_INPUT) remove(files[i]);
+		if (DEL_INPUT) remove(files[archfcnt]);
 	}
 }
 
@@ -193,6 +216,9 @@ arch_mode identify_action(char **files, int *file_exists, int filescount)
 
 int main(int argc, char* argv[])
 {
+	cl_init();
+	for(int i = 1; i < argc; i++)
+		cl_add_arg(argv[i]);
 	int    filescount = 0;
 	char **files      = NULL;
 	for(int i = 1; i < argc; i++)
@@ -224,13 +250,13 @@ int main(int argc, char* argv[])
 		compress(files, file_exists, filescount);
 	else
 	if (!COMPR && EXTR)
-		extract(files, file_exists, filescount);
+		process_archfile(files, file_exists, filescount);
 	else
 	{
 	if (identify_action(files, file_exists, filescount) == COMPRESS_MODE)
 		compress(files, file_exists, filescount);
 	else
-		extract(files, file_exists, filescount);
+		process_archfile(files, file_exists, filescount);
 	}
 
 	return 0;

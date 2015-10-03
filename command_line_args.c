@@ -9,7 +9,7 @@
 #define LZW_STR          ("--lzw")
 #define NOCOMPRESS_STR   ("--nope")
 #define FILELIST_STR     ("-ls")
-#define GETFILE_STR      ("-f")
+#define GETFILE_STR      ("-f=")
 #define COMPRESSFILE_STR ("=")
 
 int init = 0;
@@ -44,7 +44,7 @@ static inline cl_node_t * cl_converted(cl_node_t *node, cl_nodetype_t nodetype, 
 {
 	node->nodetype = node->nodetype == CLN_NONE ? nodetype : node->nodetype;
 	node->argtype = node->argtype == AT_NONE ? argtype : node->argtype;
-	node->enabled = nodetype == CLN_WORDEND;
+	node->enabled = nodetype == CLN_WORDEND || node->argtype != AT_NONE;
 	return node;
 }
 
@@ -144,6 +144,23 @@ extern void cl_add_arg(char *argument)
 {
 	if (!init) return;
 	cl_add_word(cl_dict_root, argument);
+}
+
+extern void cl_split_nums(cl_check_t *check)
+{
+#define cvals (check->values)
+#define ccnt  (check->valcnt)
+	for(int iv = 0; iv < ccnt; iv++)
+	{
+		int cvstrlen = strlen(cvals[iv]);
+		for(int i = 0; i < cvstrlen; i++)
+			if(cvals[iv][i] == ',')
+			{
+				cvals = (char**)realloc(cvals, ++ccnt * sizeof(char*));
+				cvals[ccnt - 1] = cvals[iv] + i + 1;
+				cvals[iv][i] = '\0';
+			}
+	}
 }
 
 extern cl_check_t * cl_get_arg_res(cl_argument_t arg)
