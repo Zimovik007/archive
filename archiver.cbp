@@ -13,7 +13,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="-std=c99" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -31,7 +30,16 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c99" />
 		</Compiler>
+		<Unit filename="binary_rw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="binary_rw.h" />
+		<Unit filename="command_line_args.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="command_line_args.h" />
 		<Unit filename="comp_nope.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -44,6 +52,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="compress_lzw.h" />
+		<Unit filename="dict.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="dict.h" />
 		<Unit filename="extract_huff.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -59,6 +71,10 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="mystring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mystring.h" />
 		<Unit filename="priority_queue.c">
 			<Option compilerVar="CC" />
 		</Unit>
