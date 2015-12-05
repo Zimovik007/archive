@@ -4,6 +4,6 @@
 #include <stdlib.h>
 #include "types.h"
 
-extern void extract_huffman(FILE *, filesize_t original_size, FILE *);
+extern void extract_huffman(FILE *, const filesize_t original_size, FILE *);
 
 #endif

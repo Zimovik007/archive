@@ -19,22 +19,13 @@ extern void print_bin_header(FILE *fout, int files_count, int is_solid, algorith
 	}
 	fwrite(algo_descr, sizeof(char), strlen(algo_descr), fout);
 	fprintf(fout, "%c", (char)is_solid);
-	char bit;
 	unsigned short int f_count = (unsigned short int)files_count;
-	for(int i = 0; i < 2; i++)
-	{
-		char c = 0;
-		for(int j = 7; j >= 0; j--)
-		{
-			bit = !!(f_count & (1 << (i*8 + j)));
-			c = c | (bit << j);
-		}
-		fprintf(fout, "%c", c);
-	}
+	fwrite(&f_count, 2, 1, fout);
 }
 
 extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t packed_size, filesize_t orig_size, int is_solid)
 {
+	char ary[5] = {0, 0, 0, 0, 0};
 	--fname_len;
 	fprintf(fout, "%c", (unsigned char)fname_len);
 	//print filename
@@ -43,22 +34,13 @@ extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, fi
 	filesize_t print_size_shift = ftell(fout);
 	f_num_write(fout, packed_size, sizeof(filesize_t));
 	f_num_write(fout, orig_size, sizeof(filesize_t));
-	fputs("\0\0", fout);
+	fwrite(ary, 1, 5, fout);
 	return print_size_shift;
 }
 
 extern void f_num_write(FILE *fout, filesize_t num, size_t size)
 {
-	int bit;
-	for(int i = 0; i < size; i++)
-	{
-		char c = 0;
-		for(int j = 7; j >= 0; j--){
-			bit = !!(num & (1 << (i*8 + j)));
-			c = c | (bit << j);
-		}
-		fwrite(&c, 1, 1, fout);
-	}
+	fwrite(&num, size, 1, fout);
 }
 
 extern algorithm_t f_algo(FILE *fin)
@@ -109,17 +91,8 @@ extern char* f_fname(FILE *fin, int fname_len)
 
 extern filesize_t f_int_read(FILE *fin, int size)
 {
-	filesize_t res = 0, bit;
-	char c;
-	for(int i = 0; i < size; i++)
-	{
-		fscanf(fin, "%c", &c);
-		for(int j = 7; j >= 0; j--)
-		{
-			bit = !!(c & (1 << j));
-			res = res | (bit << (i*8 + j));
-		}
-	}
+	filesize_t res = 0;
+	fread(&res, size, 1, fin);
 	return res;
 }
 

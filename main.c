@@ -64,6 +64,11 @@ compress_method_t get_comp_func(algorithm_t method)
 void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id, algorithm_t method)
 {
 	size_t shifts[filescount];
+	for(int i = 0; i < filescount; i++)
+	{
+		if (!file_exists[i] || i == newfile_id) continue;
+		shifts[i] = print_bin_fat_entry(archf, strlen(files[i]), files[i], 0, 0, 0);
+	}
 	compress_method_t start_compressing = get_comp_func(method);
 	for(int i = 0; i < filescount; i++)
 	{
@@ -75,11 +80,10 @@ void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescoun
 		print_time("", " ");
 		if (!NO_INF) printf("  %s", files[i]);
 		fflush(stdout);
-		filesize_t print_size_shift = print_bin_fat_entry(archf, strlen(files[i]), files[i], compressed_size, orig_size, 0);
 
 		start_compressing(orig, archf, &orig_size, &compressed_size);
 
-		fseek(archf, print_size_shift, SEEK_SET);
+		fseek(archf, shifts[i], SEEK_SET);
 		f_num_write(archf, compressed_size, sizeof(filesize_t));
 		f_num_write(archf, orig_size, sizeof(filesize_t));
 		fseek(archf, 0, SEEK_END);
@@ -163,18 +167,25 @@ void process_archfile(char **files, int *file_exists, int filescount)
 		if (is_solid)
 			continue;
 		unsigned short int f_in_arch_amt = f_int_read(file, sizeof(unsigned short int));
+		int fn_length[f_in_arch_amt];
+		char *filename[f_in_arch_amt];
+		filesize_t packsize[f_in_arch_amt];
+		filesize_t origsize[f_in_arch_amt];
 		for(int fcnt = 0; fcnt < f_in_arch_amt; fcnt++)
 		{
-			int   fn_len    = f_fname_len(file);
-			char *filename  = f_fname(file, fn_len);
-			int   packsize  = f_int_read(file, sizeof(filesize_t));
-			int   origsize  = f_int_read(file, sizeof(filesize_t));
+			fn_length[fcnt] = f_fname_len(file);
+			filename[fcnt]  = f_fname(file, fn_length[fcnt]);
+			packsize[fcnt]  = f_int_read(file, sizeof(filesize_t));
+			origsize[fcnt]  = f_int_read(file, sizeof(filesize_t));
+			fseek(file, 5, SEEK_CUR);
+		}
+		for(int fcnt = 0; fcnt < f_in_arch_amt; fcnt++)
+		{
 			if (cl_is_true(AT_FILELIST))
 			{
-				char measure = origsize < 1024 ? 'B' : (origsize < 1024*1024 ? 'K' : 'M');
-				double printsize = origsize < 1024 ? origsize : (origsize < 1024*1024 ? origsize/1024.0 : origsize/1024.0/1024.0);
-				printf("  %d. %s (%.1f %c)\n", fcnt + 1, filename, printsize, measure);
-				fseek(file, packsize, SEEK_CUR);
+				char measure = origsize[fcnt] < 1024 ? 'B' : (origsize[fcnt] < 1024*1024 ? 'K' : 'M');
+				double printsize = origsize[fcnt] < 1024 ? origsize[fcnt] : (origsize[fcnt] < 1024*1024 ? origsize[fcnt]/1024.0 : origsize[fcnt]/1024.0/1024.0);
+				printf("  %d. %s (%.1f %c)\n", fcnt + 1, filename[fcnt], printsize, measure);
 				continue;
 			}
 			if (cl_is_true(AT_GETFILE))
@@ -186,13 +197,14 @@ void process_archfile(char **files, int *file_exists, int filescount)
 					get_it = get_it || (strtol(check->values[i], (char**)NULL, 10) == fcnt + 1);
 				if (!get_it)
 				{
-					fseek(file, packsize, SEEK_CUR);
+					fseek(file, packsize[fcnt], SEEK_CUR);
 					continue;
 				}
 			}
-			FILE *origfile = fopen(filename, "wb");
-			start_extracting(file, origsize, origfile);
+			FILE *origfile = fopen(filename[fcnt], "wb");
+			start_extracting(file, origsize[fcnt], origfile);
 			fclose(origfile);
+			origfile = NULL;
 		}
 		fclose(file);
 		if (DEL_INPUT) remove(files[archfcnt]);
