@@ -63,13 +63,14 @@ compress_method_t get_comp_func(algorithm_t method)
 
 void compress_nosolid(FILE *archf, char **files, int *file_exists, int filescount, int newfile_id, algorithm_t method)
 {
+	size_t shifts[filescount];
 	compress_method_t start_compressing = get_comp_func(method);
 	for(int i = 0; i < filescount; i++)
 	{
 		if (!file_exists[i] || i == newfile_id) continue;
 		FILE      *orig = fopen(files[i], "rb");
-		filesize_t orig_size;
-		filesize_t compressed_size;
+		filesize_t orig_size = 0;
+		filesize_t compressed_size = 0;
 
 		print_time("", " ");
 		if (!NO_INF) printf("  %s", files[i]);

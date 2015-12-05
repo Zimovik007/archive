@@ -21,7 +21,7 @@ extern void print_bin_header(FILE *fout, int files_count, int is_solid, algorith
 	fprintf(fout, "%c", (char)is_solid);
 	char bit;
 	unsigned short int f_count = (unsigned short int)files_count;
-	for(int i = 1; i >= 0; i--)
+	for(int i = 0; i < 2; i++)
 	{
 		char c = 0;
 		for(int j = 7; j >= 0; j--)
@@ -36,7 +36,6 @@ extern void print_bin_header(FILE *fout, int files_count, int is_solid, algorith
 extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t packed_size, filesize_t orig_size, int is_solid)
 {
 	--fname_len;
-	//print filename length
 	fprintf(fout, "%c", (unsigned char)fname_len);
 	//print filename
 	for(int i = 0; i < fname_len + 1; i++)
@@ -51,7 +50,7 @@ extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, fi
 extern void f_num_write(FILE *fout, filesize_t num, size_t size)
 {
 	int bit;
-	for(int i = size - 1; i >= 0; i--)
+	for(int i = 0; i < size; i++)
 	{
 		char c = 0;
 		for(int j = 7; j >= 0; j--){
@@ -112,7 +111,7 @@ extern filesize_t f_int_read(FILE *fin, int size)
 {
 	filesize_t res = 0, bit;
 	char c;
-	for(int i = size - 1; i >= 0; i--)
+	for(int i = 0; i < size; i++)
 	{
 		fscanf(fin, "%c", &c);
 		for(int j = 7; j >= 0; j--)
