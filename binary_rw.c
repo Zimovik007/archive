@@ -18,23 +18,26 @@ extern void print_bin_header(FILE *fout, int files_count, int is_solid, algorith
 		default: algo_descr = NULL;
 	}
 	fwrite(algo_descr, sizeof(char), strlen(algo_descr), fout);
-	fprintf(fout, "%c", (char)is_solid);
+	char iss = (char)is_solid;
+	fwrite(&iss, 1, 1, fout);
 	unsigned short int f_count = (unsigned short int)files_count;
 	fwrite(&f_count, 2, 1, fout);
 }
 
 extern filesize_t print_bin_fat_entry(FILE *fout, int fname_len, char *fname, filesize_t packed_size, filesize_t orig_size, int is_solid)
 {
-	char ary[5] = {0, 0, 0, 0, 0};
+	char fileattr = 0;
+	int filetime = -1;
 	--fname_len;
-	fprintf(fout, "%c", (unsigned char)fname_len);
+	byte_t fl = (byte_t)fname_len;
+	fwrite(&fl, 1, 1, fout);
 	//print filename
-	for(int i = 0; i < fname_len + 1; i++)
-		fprintf(fout, "%c", fname[i]);
+	fwrite(fname, 1, fname_len + 1, fout);
 	filesize_t print_size_shift = ftell(fout);
 	f_num_write(fout, packed_size, sizeof(filesize_t));
 	f_num_write(fout, orig_size, sizeof(filesize_t));
-	fwrite(ary, 1, 5, fout);
+	fwrite(&fileattr, 1, 1, fout);
+	fwrite(&filetime, sizeof(int), 1, fout);
 	return print_size_shift;
 }
 
@@ -70,14 +73,14 @@ extern int f_is_upa(FILE *fin)
 extern int f_is_solid(FILE *fin)
 {
 	char c;
-	fscanf(fin, "%c", &c);
+	fread(&c, 1, 1, fin);
 	return (int)c;
 }
 
 extern int f_fname_len(FILE *fin)
 {
 	byte_t c;
-	fscanf(fin, "%c", &c);
+	fread(&c, 1, 1, fin);
 	return (int)c + 1;
 }
 
